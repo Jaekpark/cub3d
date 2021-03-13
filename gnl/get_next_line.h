@@ -1,23 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   make_win.c                                         :+:      :+:    :+:   */
+/*   get_next_line.h                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/03/07 20:03:48 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/07 20:07:02 by jaekpark         ###   ########.fr       */
+/*   Created: 2020/10/26 21:14:38 by jaekpark          #+#    #+#             */
+/*   Updated: 2020/11/11 20:53:06 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./mlx/mlx.h"
+#ifndef GET_NEXT_LINE_H
+# define GET_NEXT_LINE_H
 
-int main(void)
-{
-	void	*mlx;
-	void	*win;
+# include <unistd.h>
+# include <stdlib.h>
 
-	mlx = mlx_init();
-	win = mlx_new_window(mlx, 1280, 1024, "first_test");
-	mlx_loop(mlx);
-}
+# ifndef BUFFER_SIZE
+#  define BUFFER_SIZE 5000
+# endif
+
+# ifndef OPEN_MAX
+#  define OPEN_MAX 32
+# endif
+
+int		get_next_line(int fd, char **line);
+int		ft_strlen(char *s);
+char	*ft_strchr(char *s, int c);
+char	*ft_strdup(char *s1);
+char	*ft_strjoin(char *s1, char *s2);
+
+#endif
