@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:03:47 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 19:46:26 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 20:30:23 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,18 +39,22 @@ int parsing_path(t_cub *cub, char *line, int index)
 
 int parsing_color(t_cub *cub, char *line, int index)
 {
+	int i;
 	int r;
 	int g;
 	int b;
 	char **info;
 	char **color;
 
+	i = 0;
 	info = ft_split(line, ' ');
 	if (!info)
 		return (-1);
 	color = ft_split(info[1], ',');
 	split_mem_free(info);
-	if (!color)
+	if (color[i])
+		i++;
+	if (i != 3)
 		return (-1);
 	r = atoi(color[0]);
 	g = atoi(color[1]);
@@ -65,10 +69,45 @@ int parsing_color(t_cub *cub, char *line, int index)
 
 int parsing_resolution(t_cub *cub, char *line, int index)
 {
+	int i;
+	int width;
+	int height;
+	char **display_size;
 
+	i = 0;
+	display_size = ft_split(line, ' ');
+	while (display_size[i])
+		i++;
+	if (i != 3)
+		return (-1);
+	cub->width = atoi(display_size[1]);
+	cub->height = atoi(display_size[2]);
+	return (1);	
 }
 
-int parsing_map(t_cub *cub, char *line, int index)
+int parsing_map(t_cub *cub, char *line, int eof)
 {
+	t_str *temp;
+	t_str *node;
 
+	temp = NULL;
+	node = malloc(sizeof(t_str) * 1);
+	if (cub->head_map = NULL)
+	{	
+		cub->head_map = malloc(sizeof(t_str) * 1);
+		cub->head_map->next = node;
+		node->content = strdup(line);
+		node->next = NULL;
+	}
+	else if (cub->head_map != NULL)
+	{
+		while (cub->head_map->next != NULL)
+			temp = cub->head_map->next;
+		temp->next = node;
+		node->cotent = strdup(line);
+		node->next = NULL;
+	}
+	if (eof == 0 && node->next != NULL)
+		return (-1);
+	return (1);
 }

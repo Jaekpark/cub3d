@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:04:28 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 18:31:29 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 20:15:08 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,12 @@
 # define EMPTY_LINE 110
 # define MAP_LINE 111
 
+typedef struct s_str
+{
+	char *content;
+	struct s_str *next;
+}	t_str;
+
 typedef struct	s_cub
 {
 	int			save_opt;
@@ -57,7 +63,7 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	char		**map;
+	t_str		*head_map;
 	int			col;
 	int			row;
 }				t_cub;

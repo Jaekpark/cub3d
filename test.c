@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 19:47:45 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 20:33:38 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,12 @@
 # define EMPTY_LINE 110
 # define MAP_LINE 111
 
+typedef struct	s_str;
+{
+	char *content;
+	struct s_str *next;
+}				t_str;
+
 typedef struct	s_cub
 {
 	int			save_opt;
@@ -54,7 +60,7 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	char		**map;
+	struct s_str *head_map;
 	int			col;
 	int			row;
 }				t_cub;
@@ -73,7 +79,7 @@ void		init_cub(t_cub *cub)
 	cub->path_ft = 0;
 	cub->path_ct = 0;
 	cub->save_opt = 0;
-	cub->map = 0;
+	cub->head_map = 0;
 	cub->col = 0;
 	cub->row = 0;
 }
@@ -230,10 +236,43 @@ int parsing_color(t_cub *cub, char *line, int index)
 	return (1);
 }
 
+int parsing_map(t_cub *cub, char *line, int eof)
+{
+	t_str *temp;
+	t_str *node;
+
+	temp = NULL;
+	node = malloc(sizeof(t_str) * 1);
+	if (cub->head_map = NULL)
+	{	
+		cub->head_map = malloc(sizeof(t_str) * 1);
+		cub->head_map->next = node;
+		node->content = strdup(line);
+		node->next = NULL;
+	}
+	else if (cub->head_map != NULL)
+	{
+		while (cub->head_map->next != NULL)
+			temp = cub->head_map->next;
+		temp->next = node;
+		node->cotent = strdup(line);
+		node->next = NULL;
+	}
+	if (eof == 0 && node->next != NULL)
+		return (-1);
+	return (1);
+}
+
 int main(void)
 {
 	int ret;
 	int rgb;
+	int eof;
+	char **test = {
+		{a,b,c,d,e,f};
+		{1,2,3,4,5,6};
+		{11,22,33,44,55};
+	}
 	t_cub *cub;
 	
 	cub = malloc(sizeof(t_cub) * 1);
