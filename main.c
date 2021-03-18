@@ -3,26 +3,41 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/15 20:57:39 by parkjaekw         #+#    #+#             */
-/*   Updated: 2021/03/17 21:50:33 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 16:57:44 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <fcntl.h>
 
 #define MAP_EXTENSION ".cub"
 #define SAVE_OPT "--save"
 #define FILE_PATH "./maps/"
+#define VALID_CHAR " 012NSEW"
 #define NO_ARGUMENT 0
 #define WRONG_FILENAME 1
 #define TOO_MANY_ARGUMENT 2
 #define WRONG_OPTION 3
 #define PARSING_ERROR 4
 #define OPEN_ERROR 5
+
+#define NO_TEX 100
+#define SO_TEX 101
+#define EA_TEX 102
+#define WE_TEX 103
+#define SP_TEX 104
+#define FL_TEX 105
+#define CE_TEX 106
+#define FL_COLOR 107
+#define CE_COLOR 108
+#define RESOLUTION 109
+#define EMPTY_LINE 110
+#define MAP_LINE 111
 
 typedef struct	s_cub
 {
@@ -36,6 +51,8 @@ typedef struct	s_cub
 	char		*path_ea;
 	char		*path_we;
 	char		*path_s;
+	char		*path_ft;
+	char		*path_ct;
 	char		**map;
 	int			col;
 	int			row;
@@ -52,12 +69,43 @@ void		init_cub(t_cub *cub)
 	cub->path_s = 0;
 	cub->path_so = 0;
 	cub->path_we = 0;
+	cub->path_ft = 0;
+	cub->path_ct = 0;
 	cub->save_opt = 0;
 	cub->map = 0;
 	cub->col = 0;
 	cub->row = 0;
 }
 
+int		ft_isalpha(char c)
+{
+	if ((c >= 65 && c <= 90) || (c >=97 && c <= 122))
+		return (1);
+	return (-1);
+}
+
+char	*ft_strjoin(const char *s1, const char *s2)
+{
+	int i;
+	int j;
+	char *str;
+
+	i = 0;
+	j = 0;
+	if (!s1 && !s2)
+		return (NULL);
+	if (!(str = malloc(sizeof(char) * (strlen(s1) + strlen(s2) + 1))))
+		return (NULL);
+	while (s1[i] != '\0')
+	{
+		str[i] = s1[i];
+		i++;
+	}
+	while (s2[j] != '\0')
+		str[i++] = s2[j++];
+	str[i] = '\0';
+	return (str);
+}
 int		print_error(int error)
 {
 	if (error == NO_ARGUMENT)
@@ -71,21 +119,22 @@ int		print_error(int error)
 	else if (error == PARSING_ERROR)
 		printf("Error : Parsing error. Please check your map file.\n");
 	else if (error == OPEN_ERROR)
-		printf("Error : Can't open file. Please check your map file.\n");
+		printf("Error : Can't open file. Please check your file name or directory.\n");
 	return (-1);
 }
 
 int		check_file_name(const char *file_name)
 {
+	int pos;
+
 	if (!file_name)
 		return (-1);
-	while (*file_name)
-	{
-		if (*file_name == '.' && ft_isapha(*(file_name + 1)))
-			return (strcmp(file_name, MAP_EXTENSION));
+	if (strlen(file_name) < 5)
+		return (-1);
+	pos = strlen(file_name) - 4;
+	while (pos--)
 		file_name++;
-	}
-	return (-1);
+	return (strcmp(file_name, MAP_EXTENSION));
 }
 
 int		check_option(const char *option)
@@ -95,22 +144,89 @@ int		check_option(const char *option)
 	return (strcmp(option, SAVE_OPT));
 }
 
-int		read_cub(char *argv)
+int		ft_ismap(char *line)
 {
-	int fd;
-	char	*line;
-	char	*file_name;
-	t_cub cub;
-	
-	line = NULL;
-	if (strncmp(argv, FILE_PATH, strlen(FILE_PATH)) != 0)
-		if (!(file_name = ft_strjoin(FILE_PATH, argv)));
-			return (print_error(PARSING_ERROR));
+	while (*line)
+	{
+		if (!strchr(VALID_CHAR, *line))
+			return (-1);
+	}
+	return (strlen(line));
+}
+
+int		check_identifier(char *line)
+{
+	if (!line)
+		return (EMPTY_LINE);
+	else if (strncmp(line, "R ", 2) == 0)
+		return (RESOLUTION);
+	else if (strncmp(line, "NO", 2) == 0)
+		return (NO_TEX);
+	else if (strncmp(line, "SO", 2) == 0)
+		return (SO_TEX);
+	else if (strncmp(line, "EA", 2) == 0)
+		return (EA_TEX);
+	else if (strncmp(line, "WE", 2) == 0)
+		return (WE_TEX);
+	else if (strncmp(line, "S ", 2) == 0)
+		return (SP_TEX);
+	else if (strncmp(line, "F ", 2) == 0)
+		return (FL_COLOR);
+	else if (strncmp(line, "C ", 2) == 0)
+		return (CE_COLOR);
+	else if (strncmp(line, "FT", 2) == 0)
+		return (FL_TEX);
+	else if (strncmp(line, "CT", 2) == 0)
+		return (CE_TEX);
+	else if (ft_ismap(line))
+		return (MAP_LINE);
 	else
-		if (!(file_name = ft_strdup(argv)))
-			return (print_error(PARSING_ERROR));
-	if (!(fd = open(file_name, O_RDONLY)))
+		return (-1);
+}
+
+int		parse_line(t_cub *cub, char *line)
+{
+	int index;
+
+	if (!cub)
+		return (-1);
+	if (!(index = check_identifier(line)));
+		return (-1);
+	if (index >= 100 && index <= 106)
+		parsing_path(cub, line, index);
+	else if (index == FL_COLOR || index == CE_COLOR)
+		parsing_color(cub, line, index);
+	else if (index == RESOLUTION)
+		parsing_resolution(cub, line ,index);
+	else if (index == MAP_LINE)
+		parsing_map(cub, line, index);
+	else if (index == EMPTY_LINE && cub->map != NULL)
+		return (-1);
+	return (1);
+}
+
+
+int		read_cub(int argc, char **argv, t_cub *cub)
+{
+	int		fd;
+	int		ret;
+	char	*line;
+	t_cub	cub;
+	
+	ret = 0;
+	line = NULL;
+	if ((fd = open(argv[1], O_RDONLY) < 0))
 		return (print_error(OPEN_ERROR));
+	if (argc == 3 && strcmp(argv[2], SAVE_OPT) == 0)
+		cub.save_opt = 1;
+	while (get_next_line(fd, &line))
+	{
+		ret = parse_line(&cub, line);
+		free(line);
+		if (ret < 0)
+			return (print_error(PARSING_ERROR));
+	}
+	return (1);
 }
 
 int		check_argv(int argc, char **argv)
@@ -126,8 +242,6 @@ int		check_argv(int argc, char **argv)
 		else if (argc == 3)
 			if (check_option(argv[2]) != 0)
 				return (print_error(WRONG_OPTION));
-		if (read_cub(argv[1]) == -1)
-			
 	}
 	return (1);
 }
@@ -135,9 +249,10 @@ int		check_argv(int argc, char **argv)
 int		main(int argc, char **argv)
 {
 	int ret;
-
-	ret = 0;
-	ret = check_argv(argc, argv);
+	t_cub cub;
 	
+	cub = init_cub(&cub);
+	check_argv(argc, argv);
+	read_cub(argc, argv, &cub);
 	return (0);
 }
