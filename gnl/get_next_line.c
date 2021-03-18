@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/28 12:59:30 by jaekpark          #+#    #+#             */
-/*   Updated: 2020/11/11 20:47:59 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 18:19:30 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,14 +51,14 @@ static int			check_temp(char **temp, char **line)
 int					get_next_line(int fd, char **line)
 {
 	static char		*temp[OPEN_MAX];
-	char			buf[BUFFER_SIZE + 1];
+	char			buf[2];
 	char			*newline;
 	int				byte_count;
 
 	newline = NULL;
-	if (fd < 0 || !line || BUFFER_SIZE <= 0)
+	if (fd < 0)
 		return (-1);
-	while ((byte_count = read(fd, buf, BUFFER_SIZE)) > 0)
+	while ((byte_count = read(fd, buf, 1)) > 0)
 	{
 		buf[byte_count] = '\0';
 		temp[fd] = ft_strjoin(temp[fd], buf);
