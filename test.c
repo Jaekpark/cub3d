@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 20:33:38 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/18 21:57:27 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,9 @@
 # include <string.h>
 # include <stdlib.h>
 # include <fcntl.h>
+# include <unistd.h>
 
+# define OPEN_MAX 32
 # define MAP_EXTENSION ".cub"
 # define SAVE_OPT "--save"
 # define FILE_PATH "./maps/"
@@ -40,7 +42,7 @@
 # define EMPTY_LINE 110
 # define MAP_LINE 111
 
-typedef struct	s_str;
+typedef struct	s_str
 {
 	char *content;
 	struct s_str *next;
@@ -60,7 +62,7 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	struct s_str *head_map;
+	t_str 		*head_map;
 	int			col;
 	int			row;
 }				t_cub;
@@ -82,6 +84,221 @@ void		init_cub(t_cub *cub)
 	cub->head_map = 0;
 	cub->col = 0;
 	cub->row = 0;
+}
+
+int		ft_ismap(char *line)
+{
+	while (*line)
+	{
+		if (!strchr(VALID_CHAR, *line))
+			return (-1);
+	}
+	return (strlen(line));
+}
+
+int		check_file_name(const char *file_name)
+{
+	int pos;
+
+	if (!file_name)
+		return (-1);
+	if (strlen(file_name) < 5)
+		return (-1);
+	pos = strlen(file_name) - 4;
+	while (pos--)
+		file_name++;
+	return (strcmp(file_name, MAP_EXTENSION));
+}
+
+int		check_option(const char *option)
+{
+	if (!option)
+		return (-1);
+	return (strcmp(option, SAVE_OPT));
+}
+
+int		check_identifier(char *line)
+{
+	if (!line)
+		return (EMPTY_LINE);
+	else if (strncmp(line, "R ", 2) == 0)
+		return (RESOLUTION);
+	else if (strncmp(line, "NO", 2) == 0)
+		return (NO_TEX);
+	else if (strncmp(line, "SO", 2) == 0)
+		return (SO_TEX);
+	else if (strncmp(line, "EA", 2) == 0)
+		return (EA_TEX);
+	else if (strncmp(line, "WE", 2) == 0)
+		return (WE_TEX);
+	else if (strncmp(line, "S ", 2) == 0)
+		return (SP_TEX);
+	else if (strncmp(line, "F ", 2) == 0)
+		return (FL_COLOR);
+	else if (strncmp(line, "C ", 2) == 0)
+		return (CE_COLOR);
+	else if (strncmp(line, "FT", 2) == 0)
+		return (FL_TEX);
+	else if (strncmp(line, "CT", 2) == 0)
+		return (CE_TEX);
+	else if (ft_ismap(line))
+		return (MAP_LINE);
+	else
+		return (-1);
+}
+
+char		*ft_strdup(char *s1)
+{
+	char	*s1_tmp;
+	size_t	len;
+	size_t	i;
+
+	i = 0;
+	len = strlen(s1);
+	if (!(s1_tmp = malloc(sizeof(char) * len + 1)))
+		return (NULL);
+	if (!s1)
+		return (NULL);
+	while (i < len)
+	{
+		s1_tmp[i] = s1[i];
+		i++;
+	}
+	s1_tmp[i] = '\0';
+	return (s1_tmp);
+}
+
+int			ft_strlen(char *s)
+{
+	int		len;
+
+	len = 0;
+	while (s[len])
+		len++;
+	return (len);
+}
+
+char		*ft_strjoin(char *s1, char *s2)
+{
+	size_t	i;
+	size_t	j;
+	char	*result;
+
+	i = 0;
+	j = 0;
+	if (!s1 && !s2)
+		return (NULL);
+	if (!s1 || !s2)
+		return (!s1 ? ft_strdup(s2) : ft_strdup(s1));
+	if (!(result = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1))))
+		return (NULL);
+	while (s1[i])
+	{
+		result[i] = s1[i];
+		i++;
+	}
+	while (s2[j])
+		result[i++] = s2[j++];
+	result[i] = '\0';
+	free(s1);
+	return (result);
+}
+
+char		*ft_strchr(char *s, int c)
+{
+	int		i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] == (char)c)
+			return (&s[i]);
+		i++;
+	}
+	if (s[i] == (char)c)
+		return (&s[i]);
+	return (NULL);
+}
+
+int			get_line(char **temp, char **line, char *newline)
+{
+	char			*tmp;
+
+	tmp = NULL;
+	*newline = '\0';
+	*line = ft_strdup(*temp);
+	if (*(newline + 1) == '\0')
+	{
+		printf("1\n");
+		free(*temp);
+		*temp = NULL;
+	}
+	else
+	{
+		printf("2\n");
+		tmp = ft_strdup(newline + 1);
+		free(*temp);
+		*temp = tmp;
+	}
+	return (1);
+}
+
+int			check_temp(char **temp, char **line)
+{
+	char			*newline;
+
+	newline = ft_strchr(*temp, '\n');
+	if (*temp && newline != NULL)
+		return (get_line(temp, line, newline));
+	else if (newline == NULL && *temp)
+	{
+		printf("3\n");
+		*line = *temp;
+		*temp = NULL;
+	}
+	else
+		*line = ft_strdup("\0");
+	return (0);
+}
+
+int					get_next_line(int fd, char **line)
+{
+	static char		*temp[OPEN_MAX];
+	char			buf[2];
+	char			*newline;
+	int				byte_count;
+
+	newline = NULL;
+	if (fd < 0)
+		return (-1);
+	while ((byte_count = read(fd, buf, 1)) > 0)
+	{
+		buf[byte_count] = '\0';
+		temp[fd] = ft_strjoin(temp[fd], buf);
+		printf("byte cnt = %d\n", byte_count);
+		if ((newline = ft_strchr(temp[fd], '\n')) != NULL)
+			break ;
+	}
+	if (byte_count < 0)
+		return (-1);
+	return (check_temp(&temp[fd], line));
+}
+
+int		print_error(int error)
+{
+	if (error == NO_ARGUMENT)
+		printf("Error : Argument does not exists.\n");
+	else if (error == WRONG_FILENAME)
+		printf("Error : Wrong file name. Please check your file name.\n");
+	else if (error == TOO_MANY_ARGUMENT)
+		printf("Error : Too many argument.\n");
+	else if (error == WRONG_OPTION)
+		printf("Error : Unacceptable option. Using '--save' option.\n");
+	else if (error == PARSING_ERROR)
+		printf("Error : Parsing error. Please check your map file.\n");
+	else if (error == OPEN_ERROR)
+		printf("Error : Can't open file. Please check your file name or directory.\n");
+	return (-1);
 }
 
 int			word_count(char const *s, char c)
@@ -185,6 +402,25 @@ char		**ft_split(char const *s, char c)
 	return (dest);
 }
 
+int parsing_resolution(t_cub *cub, char *line, int index)
+{
+	int i;
+	int width;
+	int height;
+	char **display_size;
+
+	i = 0;
+	display_size = ft_split(line, ' ');
+	while (display_size[i])
+		i++;
+	if (i != 3)
+		return (-1);
+	cub->width = atoi(display_size[1]);
+	cub->height = atoi(display_size[2]);
+	return (1);	
+}
+
+
 int parsing_path(t_cub *cub, char *line, int index)
 {
 	char **path;
@@ -243,43 +479,114 @@ int parsing_map(t_cub *cub, char *line, int eof)
 
 	temp = NULL;
 	node = malloc(sizeof(t_str) * 1);
-	if (cub->head_map = NULL)
-	{	
+	if (cub->head_map == NULL)
+	{
 		cub->head_map = malloc(sizeof(t_str) * 1);
+		cub->head_map->content = NULL;
 		cub->head_map->next = node;
 		node->content = strdup(line);
 		node->next = NULL;
 	}
-	else if (cub->head_map != NULL)
+	else
 	{
-		while (cub->head_map->next != NULL)
-			temp = cub->head_map->next;
-		temp->next = node;
-		node->cotent = strdup(line);
+		temp = cub->head_map->next;
+		while (temp->next != NULL)
+			temp = temp->next;
+		node->content = strdup(line);
 		node->next = NULL;
+		temp->next = node;
 	}
 	if (eof == 0 && node->next != NULL)
 		return (-1);
 	return (1);
 }
 
-int main(void)
+int		parse_line(t_cub *cub, char *line, int eof)
+{
+	int ret;
+	int index;
+
+	if (!cub)
+		return (-1);
+	if (!(index = check_identifier(line)))
+		return (-1);
+	if (index >= 100 && index <= 106)
+		ret = parsing_path(cub, line, index);
+	else if (index == FL_COLOR || index == CE_COLOR)
+		ret = parsing_color(cub, line, index);
+	else if (index == RESOLUTION)
+		ret = parsing_resolution(cub, line ,index);
+	else if (index == MAP_LINE)
+		ret = parsing_map(cub, line, eof);
+	else if (index == EMPTY_LINE && cub->head_map->next->content != NULL)
+		return (-1);
+	return (ret);
+}
+
+int		read_file(int argc, char **argv, t_cub *cub)
+{
+	int		fd;
+	int		eof;
+	int		ret;
+	char	*line;
+
+	ret = 1;
+	line = NULL;
+	eof = 1;
+	if ((fd = open(argv[1], O_RDONLY)) < 0)
+		return (print_error(OPEN_ERROR));
+	if (argc == 3 && strcmp(argv[2], SAVE_OPT) == 0)
+		cub->save_opt = 1;
+	while (get_next_line(fd, &line) != -1)
+	{
+		ret = (ret && parse_line(cub, line, eof));
+		free(line);
+		if (ret < 0 || eof < 0)
+			return (print_error(PARSING_ERROR));
+	}
+	close(fd);
+	return (1);
+}
+
+int main(int argc, char **argv)
+{
+	int ret;
+	t_cub cub;
+
+	init_cub(&cub);
+	ret = read_file(argc, argv, &cub);
+	return (0);
+}
+/* int main(void)
 {
 	int ret;
 	int rgb;
 	int eof;
-	char **test = {
-		{a,b,c,d,e,f};
-		{1,2,3,4,5,6};
-		{11,22,33,44,55};
-	}
+	int par;
+	t_str *temp;
+	char test[3][7] = {
+		{'a','b','c','d','e','f','\0'},
+		{'1','2','3','4','5','6','\0'},
+		{'4','4','5','5','6','5','\0'}
+	};
 	t_cub *cub;
 	
 	cub = malloc(sizeof(t_cub) * 1);
 	init_cub(cub);
 	ret = parsing_path(cub, "NO      ./texture/file.xpm", NO_TEX);
 	rgb = parsing_color(cub, "F 255,255,255", FL_COLOR);
-	printf("no tex dir = %s\n", cub->path_ft);
+	par = parsing_map(cub, test[0], 1);
+	par = parsing_map(cub, test[1], 1);
+	par = parsing_map(cub, test[2], 0);
+	temp = cub->head_map->next;
+	printf("no tex dir = %s\n", cub->path_no);
 	printf("color fl = %d\n", cub->floor_color);
+	printf("map 0 = %s\n", temp->content);
+	temp = temp->next;
+	printf("map 1 = %s\n", temp->content);
+	temp = temp->next;
+	printf("map 2 = %s\n", temp->content);
+	temp = temp->next;
+	printf("map 3 = %s\n", temp->content);
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
-}
+}*/
