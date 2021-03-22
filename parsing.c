@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:03:47 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 20:30:23 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/22 18:49:31 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ int parsing_map(t_cub *cub, char *line, int eof)
 		while (cub->head_map->next != NULL)
 			temp = cub->head_map->next;
 		temp->next = node;
-		node->cotent = strdup(line);
+		node->content = strdup(line);
 		node->next = NULL;
 	}
 	if (eof == 0 && node->next != NULL)

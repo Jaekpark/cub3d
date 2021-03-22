@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   test.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 21:58:45 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/22 19:19:16 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	t_str 		*head_map;
+	t_str 		head_map;
 	int			col;
 	int			row;
 }				t_cub;
@@ -92,6 +92,7 @@ int		ft_ismap(char *line)
 	{
 		if (!strchr(VALID_CHAR, *line))
 			return (-1);
+		line++;
 	}
 	return (strlen(line));
 }
@@ -229,13 +230,11 @@ int			get_line(char **temp, char **line, char *newline)
 	*line = ft_strdup(*temp);
 	if (*(newline + 1) == '\0')
 	{
-		printf("1\n");
 		free(*temp);
 		*temp = NULL;
 	}
 	else
 	{
-		printf("2\n");
 		tmp = ft_strdup(newline + 1);
 		free(*temp);
 		*temp = tmp;
@@ -252,7 +251,6 @@ int			check_temp(char **temp, char **line)
 		return (get_line(temp, line, newline));
 	else if (newline == NULL && *temp)
 	{
-		printf("3\n");
 		*line = *temp;
 		*temp = NULL;
 	}
@@ -275,7 +273,7 @@ int					get_next_line(int fd, char **line)
 	{
 		buf[byte_count] = '\0';
 		temp[fd] = ft_strjoin(temp[fd], buf);
-		printf("byte cnt = %d\n", byte_count);
+		//printf("byte cnt = %d\n", byte_count);
 		if ((newline = ft_strchr(temp[fd], '\n')) != NULL)
 			break ;
 	}
@@ -472,13 +470,15 @@ int parsing_color(t_cub *cub, char *line, int index)
 	return (1);
 }
 
-int parsing_map(t_cub *cub, char *line, int eof)
+int parsing_map(t_cub *cub, char *line)
 {
 	t_str *temp;
 	t_str *node;
 
 	temp = NULL;
 	node = malloc(sizeof(t_str) * 1);
+	if (!line)
+		return (-1);
 	if (cub->head_map == NULL)
 	{
 		cub->head_map = malloc(sizeof(t_str) * 1);
@@ -496,16 +496,15 @@ int parsing_map(t_cub *cub, char *line, int eof)
 		node->next = NULL;
 		temp->next = node;
 	}
-	if (eof == 0 && node->next != NULL)
-		return (-1);
 	return (1);
 }
 
-int		parse_line(t_cub *cub, char *line, int eof)
+int		parse_line(t_cub *cub, char *line)
 {
 	int ret;
 	int index;
 
+	ret = 0;
 	if (!cub)
 		return (-1);
 	if (!(index = check_identifier(line)))
@@ -517,7 +516,7 @@ int		parse_line(t_cub *cub, char *line, int eof)
 	else if (index == RESOLUTION)
 		ret = parsing_resolution(cub, line ,index);
 	else if (index == MAP_LINE)
-		ret = parsing_map(cub, line, eof);
+		ret = parsing_map(cub, line);
 	else if (index == EMPTY_LINE && cub->head_map->next->content != NULL)
 		return (-1);
 	return (ret);
@@ -526,22 +525,22 @@ int		parse_line(t_cub *cub, char *line, int eof)
 int		read_file(int argc, char **argv, t_cub *cub)
 {
 	int		fd;
-	int		eof;
 	int		ret;
 	char	*line;
 
 	ret = 1;
 	line = NULL;
-	eof = 1;
 	if ((fd = open(argv[1], O_RDONLY)) < 0)
 		return (print_error(OPEN_ERROR));
-	if (argc == 3 && strcmp(argv[2], SAVE_OPT) == 0)
+	if (argc >= 3 && strcmp(argv[2], SAVE_OPT) == 0)
 		cub->save_opt = 1;
-	while (get_next_line(fd, &line) != -1)
+	while ((ret = get_next_line(fd, &line)) >= 0)
 	{
-		ret = (ret && parse_line(cub, line, eof));
+		parse_line(cub, line);
 		free(line);
-		if (ret < 0 || eof < 0)
+		if (ret == 0)
+			break;
+		if (ret < 0)
 			return (print_error(PARSING_ERROR));
 	}
 	close(fd);
@@ -555,6 +554,11 @@ int main(int argc, char **argv)
 
 	init_cub(&cub);
 	ret = read_file(argc, argv, &cub);
+	printf("%d, %d\n", cub.width, cub.height);
+	printf("%s\n", cub.path_no);
+	free(cub.path_no);
+	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
+
 	return (0);
 }
 /* int main(void)
