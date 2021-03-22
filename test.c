@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/22 19:19:16 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/22 20:18:47 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	t_str 		head_map;
+	t_str 		*head_map;
 	int			col;
 	int			row;
 }				t_cub;
@@ -177,6 +177,54 @@ int			ft_strlen(char *s)
 	while (s[len])
 		len++;
 	return (len);
+}
+
+t_str		*ft_lstnew(void *content)
+{
+	t_str	*lst;
+
+	if (!(lst = malloc(sizeof(t_str) * 1)))
+		return (NULL);
+	lst->content = content;
+	lst->next = NULL;
+	return (lst);
+}
+
+t_str	*ft_lstlast(t_str *lst)
+{
+	if (!lst)
+		return (NULL);
+	while (lst->next)
+		lst = lst->next;
+	return (lst);
+}
+
+int		ft_lstsize(t_str *lst)
+{
+	int	size;
+
+	size = 0;
+	while (lst)
+	{
+		lst = lst->next;
+		size++;
+	}
+	return (size);
+}
+
+void		ft_lstadd_back(t_str **lst, t_str *new)
+{
+	t_str	*last_add;
+
+	if (!lst || !new)
+		return ;
+	if (!*lst)
+	{
+		*lst = new;
+		return ;
+	}
+	last_add = ft_lstlast(*lst);
+	last_add->next = new;
 }
 
 char		*ft_strjoin(char *s1, char *s2)
@@ -476,25 +524,20 @@ int parsing_map(t_cub *cub, char *line)
 	t_str *node;
 
 	temp = NULL;
-	node = malloc(sizeof(t_str) * 1);
+	node = NULL;
+	printf("1111");
+	printf("line = %s\n", line);
 	if (!line)
 		return (-1);
 	if (cub->head_map == NULL)
 	{
-		cub->head_map = malloc(sizeof(t_str) * 1);
-		cub->head_map->content = NULL;
-		cub->head_map->next = node;
-		node->content = strdup(line);
-		node->next = NULL;
+		node = ft_lstnew(line);
+		cub->head_map = node;
 	}
 	else
 	{
-		temp = cub->head_map->next;
-		while (temp->next != NULL)
-			temp = temp->next;
-		node->content = strdup(line);
-		node->next = NULL;
-		temp->next = node;
+		node = ft_lstnew(line);
+		ft_lstadd_back(&cub->head_map, node);
 	}
 	return (1);
 }
@@ -543,6 +586,8 @@ int		read_file(int argc, char **argv, t_cub *cub)
 		if (ret < 0)
 			return (print_error(PARSING_ERROR));
 	}
+	printf("lst size %d\n", ft_lstsize(cub->head_map));
+
 	close(fd);
 	return (1);
 }
@@ -556,7 +601,13 @@ int main(int argc, char **argv)
 	ret = read_file(argc, argv, &cub);
 	printf("%d, %d\n", cub.width, cub.height);
 	printf("%s\n", cub.path_no);
-	free(cub.path_no);
+	printf("%s\n", cub.path_so);
+	printf("%s\n", cub.path_ea);
+	printf("%s\n", cub.path_we);
+	printf("%s\n", cub.path_s);
+	printf("%s\n", cub.path_ft);
+	printf("%s\n", cub.path_ct);
+	
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 
 	return (0);
