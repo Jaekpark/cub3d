@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/22 20:18:47 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/22 20:39:08 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ void		init_cub(t_cub *cub)
 	cub->path_ft = 0;
 	cub->path_ct = 0;
 	cub->save_opt = 0;
-	cub->head_map = 0;
+	cub->head_map = malloc(sizeof(t_str) * 1);
 	cub->col = 0;
 	cub->row = 0;
 }
@@ -140,7 +140,7 @@ int		check_identifier(char *line)
 		return (CE_COLOR);
 	else if (strncmp(line, "FT", 2) == 0)
 		return (FL_TEX);
-	else if (strncmp(line, "CT", 2) == 0)
+	else if (strncmp(line, "ST", 2) == 0)
 		return (CE_TEX);
 	else if (ft_ismap(line))
 		return (MAP_LINE);
@@ -529,10 +529,10 @@ int parsing_map(t_cub *cub, char *line)
 	printf("line = %s\n", line);
 	if (!line)
 		return (-1);
-	if (cub->head_map == NULL)
+	if (cub->head_map->next == NULL)
 	{
 		node = ft_lstnew(line);
-		cub->head_map = node;
+		cub->head_map->next = node;
 	}
 	else
 	{
@@ -548,6 +548,7 @@ int		parse_line(t_cub *cub, char *line)
 	int index;
 
 	ret = 0;
+	printf("hi im here\n");
 	if (!cub)
 		return (-1);
 	if (!(index = check_identifier(line)))
@@ -586,8 +587,6 @@ int		read_file(int argc, char **argv, t_cub *cub)
 		if (ret < 0)
 			return (print_error(PARSING_ERROR));
 	}
-	printf("lst size %d\n", ft_lstsize(cub->head_map));
-
 	close(fd);
 	return (1);
 }
@@ -596,6 +595,7 @@ int main(int argc, char **argv)
 {
 	int ret;
 	t_cub cub;
+	t_str **map;
 
 	init_cub(&cub);
 	ret = read_file(argc, argv, &cub);
@@ -605,9 +605,10 @@ int main(int argc, char **argv)
 	printf("%s\n", cub.path_ea);
 	printf("%s\n", cub.path_we);
 	printf("%s\n", cub.path_s);
-	printf("%s\n", cub.path_ft);
-	printf("%s\n", cub.path_ct);
-	
+	printf("floor tex%s\n", cub.path_ft);
+	printf("ceilling tex%s\n", cub.path_ct);
+	map = &(cub.head_map->next);
+	printf("map %s\n", *(map)->content);
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 
 	return (0);
