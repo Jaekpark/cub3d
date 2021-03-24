@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/10/15 11:27:34 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/22 20:39:08 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/23 15:06:1 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,13 +41,18 @@
 # define RESOLUTION 109
 # define EMPTY_LINE 110
 # define MAP_LINE 111
-
-typedef struct	s_str
+typedef struct	s_node
 {
 	char *content;
-	struct s_str *next;
-}				t_str;
+	struct s_node *next;
+}				t_node;
 
+typedef struct s_list
+{
+	struct s_node *curr;
+	struct s_node *head;
+	struct s_node *tail;
+}	t_list;
 typedef struct	s_cub
 {
 	int			save_opt;
@@ -62,10 +67,17 @@ typedef struct	s_cub
 	char		*path_s;
 	char		*path_ft;
 	char		*path_ct;
-	t_str 		*head_map;
+	t_list		*map;
 	int			col;
 	int			row;
 }				t_cub;
+
+void		init_list(t_list *list)
+{
+	list->curr = NULL;
+	list->head = NULL;
+	list->tail = NULL;
+}
 
 void		init_cub(t_cub *cub)
 {
@@ -81,7 +93,8 @@ void		init_cub(t_cub *cub)
 	cub->path_ft = 0;
 	cub->path_ct = 0;
 	cub->save_opt = 0;
-	cub->head_map = malloc(sizeof(t_str) * 1);
+	cub->map = malloc(sizeof(t_list));
+	init_list(cub->map);
 	cub->col = 0;
 	cub->row = 0;
 }
@@ -94,7 +107,7 @@ int		ft_ismap(char *line)
 			return (-1);
 		line++;
 	}
-	return (strlen(line));
+	return (1);
 }
 
 int		check_file_name(const char *file_name)
@@ -142,7 +155,7 @@ int		check_identifier(char *line)
 		return (FL_TEX);
 	else if (strncmp(line, "ST", 2) == 0)
 		return (CE_TEX);
-	else if (ft_ismap(line))
+	else if (ft_ismap(line) == 1)
 		return (MAP_LINE);
 	else
 		return (-1);
@@ -179,52 +192,31 @@ int			ft_strlen(char *s)
 	return (len);
 }
 
-t_str		*ft_lstnew(void *content)
+t_list	*ft_lstnew(t_list **list, char *content)
 {
-	t_str	*lst;
+	t_list	*tmp;
+	t_node	*node;
 
-	if (!(lst = malloc(sizeof(t_str) * 1)))
+	tmp = *list;
+	if (!(node = malloc(sizeof(t_node))))
 		return (NULL);
-	lst->content = content;
-	lst->next = NULL;
-	return (lst);
-}
-
-t_str	*ft_lstlast(t_str *lst)
-{
-	if (!lst)
-		return (NULL);
-	while (lst->next)
-		lst = lst->next;
-	return (lst);
-}
-
-int		ft_lstsize(t_str *lst)
-{
-	int	size;
-
-	size = 0;
-	while (lst)
+	node->content = content;
+	node->next = NULL;
+	printf("node->content is %s\n", node->content);
+	tmp->curr = node;
+	if (tmp->curr != NULL && (tmp->head == NULL && tmp->tail == NULL))
 	{
-		lst = lst->next;
-		size++;
+		printf("just 1\n");
+		tmp->head = node;
+		tmp->tail = node;
 	}
-	return (size);
-}
-
-void		ft_lstadd_back(t_str **lst, t_str *new)
-{
-	t_str	*last_add;
-
-	if (!lst || !new)
-		return ;
-	if (!*lst)
+	else if (tmp->curr != NULL && (tmp->head != NULL && tmp->tail != NULL))
 	{
-		*lst = new;
-		return ;
+		printf("kepp\n");
+		tmp->tail->next = node;
+		tmp->tail = node;
 	}
-	last_add = ft_lstlast(*lst);
-	last_add->next = new;
+	return (*list);
 }
 
 char		*ft_strjoin(char *s1, char *s2)
@@ -520,25 +512,10 @@ int parsing_color(t_cub *cub, char *line, int index)
 
 int parsing_map(t_cub *cub, char *line)
 {
-	t_str *temp;
-	t_str *node;
+	
+	printf("line is %s\n", line);
+	cub->map = ft_lstnew(&(cub->map), line);
 
-	temp = NULL;
-	node = NULL;
-	printf("1111");
-	printf("line = %s\n", line);
-	if (!line)
-		return (-1);
-	if (cub->head_map->next == NULL)
-	{
-		node = ft_lstnew(line);
-		cub->head_map->next = node;
-	}
-	else
-	{
-		node = ft_lstnew(line);
-		ft_lstadd_back(&cub->head_map, node);
-	}
 	return (1);
 }
 
@@ -548,7 +525,6 @@ int		parse_line(t_cub *cub, char *line)
 	int index;
 
 	ret = 0;
-	printf("hi im here\n");
 	if (!cub)
 		return (-1);
 	if (!(index = check_identifier(line)))
@@ -561,8 +537,8 @@ int		parse_line(t_cub *cub, char *line)
 		ret = parsing_resolution(cub, line ,index);
 	else if (index == MAP_LINE)
 		ret = parsing_map(cub, line);
-	else if (index == EMPTY_LINE && cub->head_map->next->content != NULL)
-		return (-1);
+	//else if (index == EMPTY_LINE && cub->map->head != NULL)
+		//return (-1);
 	return (ret);
 }
 
@@ -591,24 +567,38 @@ int		read_file(int argc, char **argv, t_cub *cub)
 	return (1);
 }
 
+void print_node(t_list *list)
+{
+	t_node *temp;
+
+	temp = list->head;
+	while (temp != NULL)
+	{
+		printf("%s\n", temp->content);
+		temp = temp->next;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int ret;
-	t_cub cub;
-	t_str **map;
+	t_cub *cub;
 
-	init_cub(&cub);
-	ret = read_file(argc, argv, &cub);
-	printf("%d, %d\n", cub.width, cub.height);
-	printf("%s\n", cub.path_no);
-	printf("%s\n", cub.path_so);
-	printf("%s\n", cub.path_ea);
-	printf("%s\n", cub.path_we);
-	printf("%s\n", cub.path_s);
-	printf("floor tex%s\n", cub.path_ft);
-	printf("ceilling tex%s\n", cub.path_ct);
-	map = &(cub.head_map->next);
-	printf("map %s\n", *(map)->content);
+	cub = malloc(sizeof(t_cub) * 1);
+	init_cub(cub);
+	ret = read_file(argc, argv, cub);
+	//printf("%d, %d\n", cub->width, cub->height);
+	print_node(cub->map);
+	//printf("%s\n", cub->map->head->next->content);
+	//printf("%s\n", cub.path_no);
+	//printf("%s\n", cub.path_so);
+	//printf("%s\n", cub.path_ea);
+	//printf("%s\n", cub.path_we);
+	//printf("%s\n", cub.path_s);
+	//printf("floor tex%s\n", cub.path_ft);
+	//printf("ceilling tex%s\n", cub.path_ct);
+	//printf("head_map content %s\n", cub.head_map->content);
+
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 
 	return (0);
