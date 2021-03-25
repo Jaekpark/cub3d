@@ -503,13 +503,18 @@ int parsing_path(t_cub *cub, char *line, int index)
 int check_color(t_cub *cub, char *line)
 {
 	char *tmp;
+	int	i;
 
 	tmp = line;
-	while (*tmp)
+	i = -1;
+	while (tmp[++i] != NULL)
 	{
-		if (!ft_isnum(*tmp) && *tmp != ' ' && *tmp != ',')
+		if (!ft_isnum(tmp[i]) && tmp[i] != ' ' && tmp[i] != ',')
 			return (-1);
-		else if (*line == ',' && (*(line + 1) == ',')
+		if (tmp[i] == ',' && tmp[i + 1] == ',')
+			return (-1);
+		if (i > 0 && tmp[i] == ' ' && ft_isnum(tmp[i + 1]) && ft_insnum(tmp[i ]))
+		tmp++;
 	}
 }
 
