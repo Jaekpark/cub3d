@@ -29,16 +29,16 @@ t_list	*init_cub(t_cub *cub)
 	return (cub);
 }
 
-t_tex	*init_tex(t_tex *tex)
+t_tex	*init_tex(t_tex *path)
 {
-	if (!(tex = malloc(sizeof(t_tex))))
+	if (!(path = malloc(sizeof(t_tex))))
 		return (NULL);
-	tex->north = NULL;
-	tex->south = NULL;
-	tex->east = NULL;
-	tex->west = NULL;
-	tex->sprite = NULL;
-	tex->floor = NULL;
-	tex->ceil = NULL;
-	return (tex);
+	path->north = NULL;
+	path->south = NULL;
+	path->east = NULL;
+	path->west = NULL;
+	path->sprite = NULL;
+	path->floor = NULL;
+	path->ceil = NULL;
+	return (path);
 }

@@ -23,10 +23,22 @@ void	clear_map(t_list *map)
 			map->tail = temp;
 	}
 }
+void	clear_path(t_tex *path)
+{
+	if (!path)
+		path = NULL;
+	else
+	{
+
+	}
+}
+
 void	clear_cub(t_cub *cub)
 {
-	clear_path_tex(cub->path_tex);
+	clear_path(cub->path);
+	cub->path = NULL;
 	clear_map(cub->map);
+	cub->map = NULL;
 	free(cub);
 }
 
@@ -52,10 +64,8 @@ int		parse_line(t_cub *cub, char *line)
 		cub->is_map = 1;
 	}
 	else if (index == EMPTY_LINE && cub->is_map == 1)
-	{
-
-	}
-
+		return (print_error(PARSING_ERR));
+	return (ret);
 }
 
 int		read_file(int argc, char **argv, t_cub *cub)

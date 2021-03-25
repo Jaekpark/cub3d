@@ -75,6 +75,13 @@ typedef struct s_cub
 // ft_is~
 int		ft_ismap(char *line);
 int		ft_isalpha(char c);
+// ft_str~
+char	*ft_strdup(char *s1);
+int		ft_strlen(char *s);
+char	*ft_strjoin(char *s1, char *s2);
+char	*ft_strchr(char *s, int c);
+int		ft_strcmp(char *s1, char *s2);
+int		ft_strncmp(char *s1, char *s2, int num);
 
 // gnl
 int		get_next_line(int fd, char **line);
