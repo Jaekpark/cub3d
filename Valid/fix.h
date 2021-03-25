@@ -2,15 +2,13 @@
 # define FIX_H
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 
 # define MAP_EXTENSION ".cub"
-# define SAVE "--save"
-# define FILE_PATH "./maps/"
 # define VALID_CHAR " 012NSEW"
+# define SAVE "--save"
 
 # define OPEN_MAX 32
 # define NO_ARG 100
@@ -87,13 +85,39 @@ int		ft_strncmp(char *s1, char *s2, int num);
 int		get_next_line(int fd, char **line);
 
 // split
-int		ft_split(char const *s, char c);
+char	**ft_split(char const *s, char c);
 void	split_mem_free(char **str);
+
+// check
+int		check_file_name(const char *file_name);
+int		check_option(const char *option);
+int		check_identifier(char *line);
+int		check_argv(int argc, char **argv);
+int		print_error(int error);
+
+// init
+t_list	*init_list(t_list *list);
+t_cub	*init_cub(t_cub *cub);
+t_tex	*init_tex(t_tex *path);
+
+// parsing
+int		parsing_path(t_cub *cub, char *line, int index);
+int		parsing_color(t_cub *cub, char *line, int index);
+int		parsing_resolution(t_cub *cub, char *line);
+int		parsing_map(t_list **map, char *line);
+
+// clear
+void	clear_map(t_list *map);
+void	clear_path(t_tex *path);
+void	clear_cub(t_cub *cub);
 
 // parsing
 int		parsing_path(t_cub *cub, char *line ,int index);
 int		parsing_color(t_cub *cub, char *line, int index);
 int		parsing_resolution(t_cub *cub, char *line);
 int		parsing_map(t_list **map, char *line);
+
+// lst
+int		ft_lstsize(t_list *map);
 
 #endif

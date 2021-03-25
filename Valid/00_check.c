@@ -1,16 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   check.c                                            :+:      :+:    :+:   */
+/*   00_check.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:17:15 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/25 12:23:42 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/25 15:08:14 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fix.h"
+
+int		print_error(int error)
+{
+	if (error == NO_ARG)
+		printf("Error : Argument does not exists.\n");
+	else if (error == WRONG_NAME)
+		printf("Error : Wrong file name. Please check your file name.\n");
+	else if (error == WRONG_OPT)
+		printf("Error : Unacceptable option. Using '--save' option.\n");
+	else if (error == PARSING_ERR)
+		printf("Error : Parsing error. Please check your map file.\n");
+	else if (error == OPEN_ERR)
+		printf("Error : Can't open file. Please check your file name or directory.\n");
+	return (-1);
+}
 
 int		check_file_name(const char *file_name)
 {
@@ -18,19 +33,19 @@ int		check_file_name(const char *file_name)
 
 	if (!file_name)
 		return (-1);
-	if (strlen(file_name) < 5)
+	if (ft_strlen((char *)file_name) < 5)
 		return (-1);
-	pos = strlen(file_name) - 4;
+	pos = ft_strlen((char *)file_name) - 4;
 	while (pos--)
 		file_name++;
-	return (ft_strcmp(file_name, MAP_EXTENSION));
+	return (ft_strcmp((char *)file_name, MAP_EXTENSION));
 }
 
 int		check_option(const char *option)
 {
 	if (!option)
 		return (-1);
-	return (ft_strcmp(option, SAVE));
+	return (ft_strcmp((char *)option, SAVE));
 }
 
 int		check_identifier(char *line)

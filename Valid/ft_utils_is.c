@@ -4,10 +4,10 @@ int		ft_ismap(char *line)
 {
 	while (*line)
 	{
-		if (!strchr(VALID_CHAR, *line))
+		if (!ft_strchr(VALID_CHAR, *line))
 			return (-1);
 	}
-	return (strlen(line));
+	return (1);
 }
 
 int		ft_isalpha(char c)

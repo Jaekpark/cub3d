@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parsing.c                                          :+:      :+:    :+:   */
+/*   03_parsing.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:03:47 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/25 13:38:54 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/25 15:10:20 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ int parsing_map(t_list **map, char *line)
 	t_node	*node;
 
 	tmp = *map;
-	if (!(node = malloc(sizoef(t_node))))
+	if (!(node = malloc(sizeof(t_node))))
 		return (-1);
 	node->line = ft_strdup(line);
 	node->next = NULL;
