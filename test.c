@@ -376,8 +376,6 @@ int		print_error(int error)
 		printf("Error : Argument does not exists.\n");
 	else if (error == WRONG_FILENAME)
 		printf("Error : Wrong file name. Please check your file name.\n");
-	else if (error == TOO_MANY_ARGUMENT)
-		printf("Error : Too many argument.\n");
 	else if (error == WRONG_OPTION)
 		printf("Error : Unacceptable option. Using '--save' option.\n");
 	else if (error == PARSING_ERROR)
@@ -432,18 +430,7 @@ int			*word_size(char const *s, char c)
 	return (arr);
 }
 
-void print_node(t_list *list)
-{
-	t_node *temp;
 
-	temp = list->head;
-	printf("print_node func operating point.\n");
-	while (temp != NULL)
-	{
-		printf("%s\n", temp->content);
-		temp = temp->next;
-	}
-}
 
 void		mem_allocate(char **dest, int *size, int count)
 {
