@@ -214,13 +214,22 @@ int			ft_strncmp(char *s1, char *s2, int num)
 
 int		ft_ismap(char *line)
 {
+	if (line[0] == 0)
+		return (-1);
 	while (*line)
 	{
-		if (!ft_strchr(VALID_CHAR, *line))
+		if (line[0] != '\n' && !ft_strchr(VALID_CHAR, *line))
 			return (-1);
 		line++;
 	}
 	return (1);
+}
+
+int		ft_isnum(char c)
+{
+	if (c >= '0' && c <= '9')
+		return (1);
+	return (-1);
 }
 
 int		ft_isalpha(char c)
@@ -429,6 +438,7 @@ void	clear_map(t_list *map)
 		if (temp != NULL)
 			map->tail = temp;
 	}
+	free(map);
 }
 
 void	clear_path(t_tex *path)
@@ -490,33 +500,38 @@ int parsing_path(t_cub *cub, char *line, int index)
 	return (1);
 }
 
+int check_color(t_cub *cub, char *line)
+{
+	char *tmp;
+
+	tmp = line;
+	while (*tmp)
+	{
+		if (!ft_isnum(*tmp) && *tmp != ' ' && *tmp != ',')
+			return (-1);
+		else if (*line == ',' && (*(line + 1) == ',')
+	}
+}
+
 int parsing_color(t_cub *cub, char *line, int index)
 {
 	int i;
-	int r;
-	int g;
-	int b;
 	char **info;
 	char **color;
 
 	i = 0;
 	info = ft_split(line, ' ');
-	if (!info)
-		return (-1);
 	color = ft_split(info[1], ',');
 	while (color[i] != NULL)
 		i++;
 	if (i != 3)
 		return (-1);
-	r = atoi(color[0]);
-	g = atoi(color[1]);
-	b = atoi(color[2]);
+	if (index == CEIL_COL)
+		cub->ceiling_color = ((atoi(color[0]) & 0x0ff) << 16) | ((atoi(color[1]) & 0x0ff) << 8) | (atoi(color[2]) & 0x0ff);
+	else if (index == FLOOR_COL)
+		cub->floor_color = ((atoi(color[0]) & 0x0ff) << 16) | ((atoi(color[1]) & 0x0ff) << 8) | (atoi(color[2]) & 0x0ff);
 	split_mem_free(info);
 	split_mem_free(color);
-	if (index == CEIL_COL)
-		cub->ceiling_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
-	else if (index == FLOOR_COL)
-		cub->floor_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
 	return (1);
 }
 
@@ -539,12 +554,13 @@ int parsing_resolution(t_cub *cub, char *line)
 	return (1);	
 }
 
-int parsing_map(t_list **map, char *line)
+int parsing_map(t_cub *cub, char *line)
 {
 	t_list	*tmp;
 	t_node	*node;
 
-	tmp = *map;
+	tmp = cub->map;
+	cub->is_map = 1;
 	if (!(node = malloc(sizeof(t_node))))
 		return (-1);
 	node->line = ft_strdup(line);
@@ -602,8 +618,7 @@ int		check_option(const char *option)
 
 int		check_identifier(char *line)
 {
-	printf("hi\n");
-	if (!line)
+	if (line[0] == 0)
 		return (EMPTY_LINE);
 	else if (ft_strncmp(line, "R ", 2) == 0)
 		return (RESOLUTION);
@@ -625,13 +640,13 @@ int		check_identifier(char *line)
 		return (FLOOR_TEX);
 	else if (ft_strncmp(line, "ST", 2) == 0)
 		return (CEIL_TEX);
-	else if (ft_ismap(line))
+	else if (ft_ismap(line) == 1)
 		return (MAP_LINE);
 	else
 		return (-1);
 }
 
-int		check_argv(int argc, char **argv)
+int		check_argv(int argc, char **argv, t_cub *cub)
 {
 	if (argc < 2)
 		return (print_error(NO_ARG));
@@ -640,8 +655,12 @@ int		check_argv(int argc, char **argv)
 		if (check_file_name(argv[1]) != 0)
 			return (print_error(WRONG_NAME));
 		else if (argc >= 3)
+		{
 			if (check_option(argv[2]) != 0)
 				return (print_error(WRONG_OPT));
+			else if (check_option(argv[2]) == 0)
+				cub->save_opt = 1;
+		}
 	}
 	return (1);
 }
@@ -674,6 +693,7 @@ void	print_cub(t_cub *cub)
 	printf("floor tex : %s\n", cub->path->floor);
 	printf("ceiling tex : %s\n", cub->path->ceil);
 	printf("map\n");
+	printf("head line [0] = %d\n", (int)cub->map->head->line[0]);
 	print_node(cub->map);
 
 }
@@ -688,7 +708,6 @@ int		parse_line(t_cub *cub, char *line)
 		return (-1);
 	if (!(index = check_identifier(line)))
 		return (-1);
-	printf("index = %d\n", index);
 	if (index >=NORTH_TEX && index <= CEIL_TEX)
 		ret = parsing_path(cub, line, index);
 	else if (index == FLOOR_COL || index == CEIL_COL)
@@ -696,12 +715,11 @@ int		parse_line(t_cub *cub, char *line)
 	else if (index == RESOLUTION)
 		ret = parsing_resolution(cub, line);
 	else if (index == MAP_LINE)
-	{
-		ret = parsing_map(&(cub->map), line);
-		cub->is_map = 1;
-	}
+		ret = parsing_map(cub, line);
 	else if (index == EMPTY_LINE && cub->is_map == 1)
-		return (print_error(PARSING_ERR));
+		ret = -1;
+	else if (index == EMPTY_LINE && cub->is_map == 0)
+		ret = 1;
 	return (ret);
 }
 
@@ -717,21 +735,15 @@ int		read_file(int argc, char **argv, t_cub *cub)
 	line = NULL;
 	if ((fd = open("./1.cub", O_RDONLY)) < 0)
 		return (print_error(OPEN_ERR));
-	printf("fd = %d\n", fd);
-	if (argc >= 3 && ft_strcmp(argv[2], SAVE) == 0)
-		cub->save_opt = 1;
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
 		ret = parse_line(cub, line);
-		printf("gnl line is %s\n", line);
 		free(line);
-		if (ret == -1 || eof == -1)
-			return (print_error(PARSING_ERR));
-		if (eof == 0)
+		if (eof <= 0 || ret < 0)
 			break;
 	}
 	close(fd);
-	return (1);
+	return (ret);
 }
 
 int main(int argc, char **argv)
@@ -740,9 +752,17 @@ int main(int argc, char **argv)
 	t_cub *cub;
 
 	cub = init_cub(cub);
-	ret = read_file(argc, argv, cub);
-	print_cub(cub);
-	clear_cub(cub);
+	if ((ret = read_file(argc, argv, cub)) == -1)
+	{
+		clear_cub(cub);
+		printf("ret = %d\n", ret);
+	}
+	else
+	{
+		print_cub(cub);
+		clear_cub(cub);
+	}
+
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 	return (0);
 }
