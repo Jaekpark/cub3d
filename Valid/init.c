@@ -10,18 +10,6 @@ t_list	*init_list(t_list *list)
 	return (list);
 }
 
-char	**init_path(char **path_tex, int size)
-{
-	int idx;
-
-	idx = -1;
-	if (!(path_tex = malloc(sizeof(char *) * (size + 1))))
-		return (NULL);
-	while (++idx <= size)
-		path_tex[idx] = NULL;
-	return (path_tex);
-}
-
 t_list	*init_cub(t_cub *cub)
 {
 	int size;
@@ -29,6 +17,7 @@ t_list	*init_cub(t_cub *cub)
 	size = 7
 	if (!(cub = malloc(sizeof(t_cub))))
 		return (NULL);
+	cub->is_map = 0;
 	cub->save_opt = 0;
 	cub->width = 0;
 	cub->height = 0;
@@ -36,6 +25,20 @@ t_list	*init_cub(t_cub *cub)
 	cub->ceiling_color = 0;
 	cub->col = 0;
 	cub->row = 0;
-	cub->path_tex = init_path(cub->path_tex, size);
+	cub->path = init_tex(cub->path);
 	return (cub);
+}
+
+t_tex	*init_tex(t_tex *tex)
+{
+	if (!(tex = malloc(sizeof(t_tex))))
+		return (NULL);
+	tex->north = NULL;
+	tex->south = NULL;
+	tex->east = NULL;
+	tex->west = NULL;
+	tex->sprite = NULL;
+	tex->floor = NULL;
+	tex->ceil = NULL;
+	return (tex);
 }

@@ -1,59 +1,5 @@
 #include "fix.h"
 
-t_list	*init_list(t_list *list)
-{
-	if (!(list = malloc(sizeof(t_list))))
-		return (NULL);
-	list->curr = NULL;
-	list->head = NULL;
-	list->tail = NULL;
-	return (list);
-}
-
-char	**init_path(char **path_tex, int size)
-{
-	int idx;
-
-	idx = -1;
-	if (!(path_tex = malloc(sizeof(char *) * (size + 1))))
-		return (NULL);
-	while (++idx <= size)
-		path_tex[idx] = NULL;
-	return (path_tex);
-}
-
-t_list	*init_cub(t_cub *cub)
-{
-	int size;
-
-	size = 7
-	if (!(cub = malloc(sizeof(t_cub))))
-		return (NULL);
-	cub->save_opt = 0;
-	cub->width = 0;
-	cub->height = 0;
-	cub->floor_color = 0;
-	cub->ceiling_color = 0;
-	cub->col = 0;
-	cub->row = 0;
-	cub->path_tex = init_path(cub->path_tex, size);
-	return (cub);
-}
-
-void	clear_path_tex(char **path_tex)
-{
-	int size;
-	int idx;
-
-	idx = -1;
-	size = 7;
-	if (!path_tex)
-		return ;
-	while (++idx <= size)
-		free(path_tex[idx]);
-	free(path_tex);
-}
-
 void	clear_map(t_list *map)
 {
 	t_node	*temp;
@@ -84,20 +30,57 @@ void	clear_cub(t_cub *cub)
 	free(cub);
 }
 
+int		parse_line(t_cub *cub, char *line)
+{
+	int ret;
+	int index;
+
+	ret = 0;
+	if (!cub)
+		return (-1);
+	if (!(index = check_identifier(line)))
+		return (-1);
+	if (index >= 0 && index <= 6)
+		ret = parsing_path(cub, line, index);
+	else if (index == FLOOR_COL || index == CEIL_COL)
+		ret = parsing_color(cub, line, index);
+	else if (index == RESOLUTION)
+		ret = parsing_resolution(cub, line);
+	else if (index == MAP_LINE)
+	{
+		ret = parsing_map(&(cub->map), line);
+		cub->is_map = 1;
+	}
+	else if (index == EMPTY_LINE && cub->is_map == 1)
+	{
+
+	}
+
+}
+
 int		read_file(int argc, char **argv, t_cub *cub)
 {
-	int	fd;
-	int ret;
+	int		fd;
+	int 	eof;
+	int 	ret;
 	char	*line;
 
 	ret = 0;
+	eof = 1;
 	line = NULL;
 	if ((fd = open(argv[1], O_RDONLY)) < 0)
 		return (print_error(OPEN_ERR));
 	if (argc >= 3 && strcmp(argv[2], SAVE) == 0)
 		cub->save_opt = 1;
-	while ((ret = get_next_line(fd, &line)) >= 0)
+	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
-
+		ret = parse_line(cub, line);
+		free(line);
+		if (ret < 0 || eof < 0)
+			return (print_error(PARSING_ERR));
+		if (eof == 0)
+			break;
 	}
+	close(fd);
+	return (1);
 }

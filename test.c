@@ -53,6 +53,14 @@ typedef struct s_list
 	struct s_node *head;
 	struct s_node *tail;
 }	t_list;
+
+typedef struct s_info
+{
+	int i;
+	char *path;
+} t_info;
+
+
 typedef struct	s_cub
 {
 	int			save_opt;
@@ -68,6 +76,7 @@ typedef struct	s_cub
 	char		*path_ft;
 	char		*path_ct;
 	t_list		*map;
+	t_tex       *tex;
 	int			col;
 	int			row;
 }				t_cub;

@@ -12,10 +12,7 @@
 # define FILE_PATH "./maps/"
 # define VALID_CHAR " 012NSEW"
 
-#ifndef OPEN_MAX
 # define OPEN_MAX 32
-#endif
-
 # define NO_ARG 100
 # define WRONG_NAME 101
 # define WRONG_OPT 102
@@ -39,7 +36,7 @@ typedef struct s_node
 {
 	char	*line;
 	struct s_node *next;
-}	t_node;
+}				t_node;
 
 typedef struct s_list
 {
@@ -48,19 +45,48 @@ typedef struct s_list
 	struct s_node *tail;
 }	t_list;
 
+typedef struct s_tex
+{
+	char	*north;
+	char	*south;
+	char	*east;
+	char	*west;
+	char	*sprite;
+	char	*floor;
+	char	*ceil;
+}	t_tex;
+
 typedef struct s_cub
 {
-	int	save_opt;
-	int	width;
-	int	height;
-	int	floor_color;
-	int	ceiling_color;
-	char **path_tex;
-	t_list *map;
+	int is_map;
+	int width;
+	int height;
 	int col;
 	int row;
+	int	save_opt;
+	int floor_color;
+	int ceiling_color;
+	t_list	*map;
+	t_tex	*path;
 }	t_cub;
 
-int	get_next_line(int fd, char **line);
+
+
+// ft_is~
+int		ft_ismap(char *line);
+int		ft_isalpha(char c);
+
+// gnl
+int		get_next_line(int fd, char **line);
+
+// split
+int		ft_split(char const *s, char c);
+void	split_mem_free(char **str);
+
+// parsing
+int		parsing_path(t_cub *cub, char *line ,int index);
+int		parsing_color(t_cub *cub, char *line, int index);
+int		parsing_resolution(t_cub *cub, char *line);
+int		parsing_map(t_list **map, char *line);
 
 #endif

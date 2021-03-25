@@ -16,4 +16,3 @@ int		ft_isalpha(char c)
 		return (1);
 	return (-1);
 }
-\
