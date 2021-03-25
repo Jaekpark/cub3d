@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   split.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jaekpark <jaekpark@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 19:09:41 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/18 19:25:15 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/24 16:44:29 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "validation.h"
+# include "fix.h"
 
 static int		word_count(char const *s, char c)
 {

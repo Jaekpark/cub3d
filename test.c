@@ -94,10 +94,50 @@ void		init_cub(t_cub *cub)
 	cub->path_ct = 0;
 	cub->save_opt = 0;
 	cub->map = malloc(sizeof(t_list));
-	init_list(cub->map);
 	cub->col = 0;
 	cub->row = 0;
 }
+
+void		clear_map(t_list *map)
+{
+	t_node *temp;
+
+	temp = NULL;
+	while(map->head != NULL)
+	{
+		if (map->head->next == NULL)
+		{
+			free(map->head->content);
+			free(map->head);
+			break;
+		}
+		temp = map->head;
+		if (!temp)
+			return ;
+		while (temp->next->next != NULL)
+			temp = temp->next;
+		free(temp->next->content);
+		free(temp->next);
+		temp->next = NULL;
+		if (temp != NULL)
+			map->tail = temp;
+	}
+}
+
+void		clear_cub(t_cub *cub)
+{
+	free(cub->path_ct);
+	free(cub->path_ea);
+	free(cub->path_ft);
+	free(cub->path_no);
+	free(cub->path_s);
+	free(cub->path_so);
+	free(cub->path_we);
+	clear_map(cub->map);
+	free(cub->map);
+	free(cub);
+}
+
 
 int		ft_ismap(char *line)
 {
@@ -192,31 +232,30 @@ int			ft_strlen(char *s)
 	return (len);
 }
 
-t_list	*ft_lstnew(t_list **list, char *content)
+void	ft_lstnew(t_list **list, char *content)
 {
 	t_list	*tmp;
 	t_node	*node;
 
 	tmp = *list;
 	if (!(node = malloc(sizeof(t_node))))
-		return (NULL);
-	node->content = content;
+		return ;
+	node->content = strdup(content);
 	node->next = NULL;
 	printf("node->content is %s\n", node->content);
 	tmp->curr = node;
 	if (tmp->curr != NULL && (tmp->head == NULL && tmp->tail == NULL))
 	{
 		printf("just 1\n");
-		tmp->head = node;
-		tmp->tail = node;
+		tmp->head = tmp->curr;
+		tmp->tail = tmp->curr;
 	}
-	else if (tmp->curr != NULL && (tmp->head != NULL && tmp->tail != NULL))
+	else
 	{
-		printf("kepp\n");
-		tmp->tail->next = node;
-		tmp->tail = node;
+		tmp->tail->next = tmp->curr;
+		tmp->tail = tmp->curr;
+		printf("tail node is %s\n", tmp->tail->content);
 	}
-	return (*list);
 }
 
 char		*ft_strjoin(char *s1, char *s2)
@@ -384,6 +423,19 @@ int			*word_size(char const *s, char c)
 	return (arr);
 }
 
+void print_node(t_list *list)
+{
+	t_node *temp;
+
+	temp = list->head;
+	printf("print_node func operating point.\n");
+	while (temp != NULL)
+	{
+		printf("%s\n", temp->content);
+		temp = temp->next;
+	}
+}
+
 void		mem_allocate(char **dest, int *size, int count)
 {
 	int		i;
@@ -455,6 +507,7 @@ int parsing_resolution(t_cub *cub, char *line, int index)
 		return (-1);
 	cub->width = atoi(display_size[1]);
 	cub->height = atoi(display_size[2]);
+	split_mem_free((display_size));
 	return (1);	
 }
 
@@ -514,7 +567,7 @@ int parsing_map(t_cub *cub, char *line)
 {
 	
 	printf("line is %s\n", line);
-	cub->map = ft_lstnew(&(cub->map), line);
+	ft_lstnew(&(cub->map), line);
 
 	return (1);
 }
@@ -567,28 +620,21 @@ int		read_file(int argc, char **argv, t_cub *cub)
 	return (1);
 }
 
-void print_node(t_list *list)
-{
-	t_node *temp;
-
-	temp = list->head;
-	while (temp != NULL)
-	{
-		printf("%s\n", temp->content);
-		temp = temp->next;
-	}
-}
-
 int main(int argc, char **argv)
 {
 	int ret;
 	t_cub *cub;
 
 	cub = malloc(sizeof(t_cub) * 1);
+	printf("cub size %lu\n", sizeof(t_cub));
 	init_cub(cub);
+	init_list(cub->map);
 	ret = read_file(argc, argv, cub);
-	//printf("%d, %d\n", cub->width, cub->height);
 	print_node(cub->map);
+	clear_cub(cub);
+	//printf("%d, %d\n", cub->width, cub->height);
+
+	//printf("in main func %s\n", cub->map->head->next->content);
 	//printf("%s\n", cub->map->head->next->content);
 	//printf("%s\n", cub.path_no);
 	//printf("%s\n", cub.path_so);
@@ -599,7 +645,7 @@ int main(int argc, char **argv)
 	//printf("ceilling tex%s\n", cub.path_ct);
 	//printf("head_map content %s\n", cub.head_map->content);
 
-	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
+	system("leaks test > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 
 	return (0);
 }
