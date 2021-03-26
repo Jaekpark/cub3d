@@ -53,14 +53,14 @@ typedef struct s_tex
 
 typedef struct s_cub
 {
-	int is_map;
-	int width;
-	int height;
-	int col;
-	int row;
-	int	save_opt;
-	int floor_color;
-	int ceiling_color;
+	int		is_map;
+	int		width;
+	int		height;
+	int		col;
+	int		row;
+	int		save_opt;
+	int 	floor_color;
+	int 	ceiling_color;
 	t_list	*map;
 	t_tex	*path;
 }	t_cub;
@@ -136,6 +136,35 @@ char		*ft_strdup(char *s1)
 	}
 	s1_tmp[i] = '\0';
 	return (s1_tmp);
+}
+
+int				ft_atoi(const char *str)
+{
+	int			i;
+	long long	sign;
+	long long	result;
+
+	i = 0;
+	sign = 1;
+	result = 0;
+	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
+		i++;
+	if (str[i] == '+' || str[i] == '-')
+	{
+		sign = (str[i] == '-') ? -1 : 1;
+		i++;
+	}
+	while (str[i] >= '0' && str[i] <= '9')
+	{
+		result *= 10;
+		result += (long long)(str[i] - '0');
+		i++;
+		if (result > 2147483648 && sign == -1)
+			return (0);
+		if (result > 2147483647 && sign == 1)
+			return (-1);
+	}
+	return (result * sign);
 }
 
 char		*ft_strjoin(char *s1, char *s2)
@@ -218,7 +247,7 @@ int		ft_ismap(char *line)
 		return (-1);
 	while (*line)
 	{
-		if (line[0] != '\n' && !ft_strchr(VALID_CHAR, *line))
+		if (!ft_strchr(VALID_CHAR, *line))
 			return (-1);
 		line++;
 	}
@@ -500,41 +529,53 @@ int parsing_path(t_cub *cub, char *line, int index)
 	return (1);
 }
 
-int check_color(t_cub *cub, char *line)
+char	**check_color(char *info)
 {
-	char *tmp;
+	char	**color;
+	int comma;
 	int	i;
 
-	tmp = line;
 	i = -1;
-	while (tmp[++i] != NULL)
+	comma = 0;
+	while (info[++i] != '\0')
 	{
-		if (!ft_isnum(tmp[i]) && tmp[i] != ' ' && tmp[i] != ',')
-			return (-1);
-		if (tmp[i] == ',' && tmp[i + 1] == ',')
-			return (-1);
-		if (i > 0 && tmp[i] == ' ' && ft_isnum(tmp[i + 1]) && ft_insnum(tmp[i ]))
-		tmp++;
+		if (!ft_isnum(info[i]) && info[i] != ',')
+			return (NULL);
+		if (info[i] == ',')
+			comma++;
+		if (comma > 2)
+			return (NULL);
 	}
+	color = ft_split(info, ',');
+	i = 0;
+	while (color[i] != NULL)
+		i++;
+	if (i != 3)
+		return (NULL);
+	return (color);
 }
 
 int parsing_color(t_cub *cub, char *line, int index)
 {
-	int i;
+	int r;
+	int g;
+	int b;
 	char **info;
 	char **color;
 
-	i = 0;
 	info = ft_split(line, ' ');
-	color = ft_split(info[1], ',');
-	while (color[i] != NULL)
-		i++;
-	if (i != 3)
+	if (!(color = check_color(info[1])))
+	{
+		split_mem_free(info);
 		return (-1);
+	}
+	r = ft_atoi(color[0]);
+	g = ft_atoi(color[1]);
+	b = ft_atoi(color[2]);
 	if (index == CEIL_COL)
-		cub->ceiling_color = ((atoi(color[0]) & 0x0ff) << 16) | ((atoi(color[1]) & 0x0ff) << 8) | (atoi(color[2]) & 0x0ff);
+		cub->ceiling_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
 	else if (index == FLOOR_COL)
-		cub->floor_color = ((atoi(color[0]) & 0x0ff) << 16) | ((atoi(color[1]) & 0x0ff) << 8) | (atoi(color[2]) & 0x0ff);
+		cub->floor_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
 	split_mem_free(info);
 	split_mem_free(color);
 	return (1);
@@ -553,8 +594,8 @@ int parsing_resolution(t_cub *cub, char *line)
 		i++;
 	if (i != 3)
 		return (-1);
-	cub->width = atoi(display_size[1]);
-	cub->height = atoi(display_size[2]);
+	cub->width = ft_atoi(display_size[1]);
+	cub->height = ft_atoi(display_size[2]);
 	split_mem_free(display_size);
 	return (1);	
 }

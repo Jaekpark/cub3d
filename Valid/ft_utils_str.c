@@ -1,6 +1,6 @@
 #include "fix.h"
 
-char		*ft_strdup(char *s1)
+char		*ft_strdup(const char *s1)
 {
 	char	*s1_tmp;
 	size_t	len;
@@ -21,7 +21,7 @@ char		*ft_strdup(char *s1)
 	return (s1_tmp);
 }
 
-int			ft_strlen(char *s)
+int			ft_strlen(const char *s)
 {
 	int		len;
 

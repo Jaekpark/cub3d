@@ -22,6 +22,7 @@ void	clear_map(t_list *map)
 		if (temp != NULL)
 			map->tail = temp;
 	}
+	free(map);
 }
 
 void	clear_path(t_tex *path)

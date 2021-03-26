@@ -16,6 +16,7 @@
 # define WRONG_OPT 102
 # define PARSING_ERR 103
 # define OPEN_ERR 104
+# define COLOR_ERR 105
 
 # define NORTH_TEX 0
 # define SOUTH_TEX 1
@@ -73,6 +74,8 @@ typedef struct s_cub
 // ft_is~
 int		ft_ismap(char *line);
 int		ft_isalpha(char c);
+int		ft_isnum(char c);
+
 // ft_str~
 char	*ft_strdup(char *s1);
 int		ft_strlen(char *s);
@@ -91,8 +94,11 @@ void	split_mem_free(char **str);
 // check
 int		check_file_name(const char *file_name);
 int		check_option(const char *option);
-int		check_identifier(char *line);
-int		check_argv(int argc, char **argv);
+int		check_identifier(const char *line);
+int		check_argv(const int argc, const char **argv, t_cub *cub);
+char	**check_color(char *info);
+
+// error
 int		print_error(int error);
 
 // init
@@ -104,18 +110,12 @@ t_tex	*init_tex(t_tex *path);
 int		parsing_path(t_cub *cub, char *line, int index);
 int		parsing_color(t_cub *cub, char *line, int index);
 int		parsing_resolution(t_cub *cub, char *line);
-int		parsing_map(t_list **map, char *line);
+int		parsing_map(t_cub *cub, char *line);
 
 // clear
 void	clear_map(t_list *map);
 void	clear_path(t_tex *path);
 void	clear_cub(t_cub *cub);
-
-// parsing
-int		parsing_path(t_cub *cub, char *line ,int index);
-int		parsing_color(t_cub *cub, char *line, int index);
-int		parsing_resolution(t_cub *cub, char *line);
-int		parsing_map(t_list **map, char *line);
 
 // lst
 int		ft_lstsize(t_list *map);

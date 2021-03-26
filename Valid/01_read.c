@@ -41,19 +41,18 @@ int		parse_line(t_cub *cub, char *line)
 		return (-1);
 	if (!(index = check_identifier(line)))
 		return (-1);
-	if (index >= 0 && index <= 6)
+	if (index >= NORTH_TEX && index <= CEIL_TEX)
 		ret = parsing_path(cub, line, index);
 	else if (index == FLOOR_COL || index == CEIL_COL)
 		ret = parsing_color(cub, line, index);
 	else if (index == RESOLUTION)
 		ret = parsing_resolution(cub, line);
 	else if (index == MAP_LINE)
-	{
-		ret = parsing_map(&(cub->map), line);
-		cub->is_map = 1;
-	}
+		ret = parsing_map(cub, line);
 	else if (index == EMPTY_LINE && cub->is_map == 1)
-		return (print_error(PARSING_ERR));
+		ret = -1;
+	else if (index == EMPTY_LINE && cub->is_map == 0)
+		ret = 1;
 	return (ret);
 }
 
@@ -67,17 +66,13 @@ int		read_file(int argc, char **argv, t_cub *cub)
 	ret = 0;
 	eof = 1;
 	line = NULL;
-	if ((fd = open(ar, O_RDONLY)) < 0)
+	if ((fd = open(argv[1], O_RDONLY)) < 0)
 		return (print_error(OPEN_ERR));
-	if (argc >= 3 && ft_strcmp(argv[2], SAVE) == 0)
-		cub->save_opt = 1;
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
 		ret = parse_line(cub, line);
 		free(line);
-		if (ret < 0 || eof < 0)
-			return (print_error(PARSING_ERR));
-		if (eof == 0)
+		if (ret < 0 || eof <= 0)
 			break;
 	}
 	close(fd);

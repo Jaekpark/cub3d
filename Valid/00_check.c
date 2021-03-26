@@ -6,25 +6,36 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:17:15 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/25 15:08:14 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/26 14:23:52 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fix.h"
 
-int		print_error(int error)
+char	**check_color(char *info)
 {
-	if (error == NO_ARG)
-		printf("Error : Argument does not exists.\n");
-	else if (error == WRONG_NAME)
-		printf("Error : Wrong file name. Please check your file name.\n");
-	else if (error == WRONG_OPT)
-		printf("Error : Unacceptable option. Using '--save' option.\n");
-	else if (error == PARSING_ERR)
-		printf("Error : Parsing error. Please check your map file.\n");
-	else if (error == OPEN_ERR)
-		printf("Error : Can't open file. Please check your file name or directory.\n");
-	return (-1);
+	char	**color;
+	int comma;
+	int	i;
+
+	i = -1;
+	comma = 0;
+	while (info[++i] != '\0')
+	{
+		if (!ft_isnum(info[i]) && info[i] != ',')
+			return (NULL);
+		if (info[i] == ',')
+			comma++;
+		if (comma > 2)
+			return (NULL);
+	}
+	color = ft_split(info, ',');
+	if (color[3] != NULL)
+	{
+		split_mem_free(color);
+		return (NULL);
+	}
+	return (color);
 }
 
 int		check_file_name(const char *file_name)
@@ -50,7 +61,7 @@ int		check_option(const char *option)
 
 int		check_identifier(char *line)
 {
-	if (!line)
+	if (line[0] == 0)
 		return (EMPTY_LINE);
 	else if (ft_strncmp(line, "R ", 2) == 0)
 		return (RESOLUTION);
@@ -72,13 +83,13 @@ int		check_identifier(char *line)
 		return (FLOOR_TEX);
 	else if (ft_strncmp(line, "CT", 2) == 0)
 		return (CEIL_TEX);
-	else if (ft_ismap(line))
+	else if (ft_ismap(line) == 1)
 		return (MAP_LINE);
 	else
 		return (-1);
 }
 
-int		check_argv(int argc, char **argv)
+int		check_argv(int argc, char **argv, t_cub *cub)
 {
 	if (argc < 2)
 		return (print_error(NO_ARG));
@@ -87,8 +98,12 @@ int		check_argv(int argc, char **argv)
 		if (check_file_name(argv[1]) != 0)
 			return (print_error(WRONG_NAME));
 		else if (argc >= 3)
+		{
 			if (check_option(argv[2]) != 0)
 				return (print_error(WRONG_OPT));
+			else if (check_option(argv[2] == 0) == 0)
+				cub->save_opt = 1;
+		}
 	}
 	return (1);
 }
