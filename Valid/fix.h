@@ -60,8 +60,6 @@ typedef struct s_cub
 	int is_map;
 	int width;
 	int height;
-	int col;
-	int row;
 	int	save_opt;
 	int floor_color;
 	int ceiling_color;
@@ -69,7 +67,9 @@ typedef struct s_cub
 	t_tex	*path;
 }	t_cub;
 
-
+// read
+int		read_file(int argc, char **argv, t_cub *cub);
+int		parse_line(t_cub *cub, char *line);
 
 // ft_is~
 int		ft_ismap(char *line);
@@ -94,8 +94,8 @@ void	split_mem_free(char **str);
 // check
 int		check_file_name(const char *file_name);
 int		check_option(const char *option);
-int		check_identifier(const char *line);
-int		check_argv(const int argc, const char **argv, t_cub *cub);
+int		check_identifier(char *line);
+int		check_argv(int argc, char **argv, t_cub *cub);
 char	**check_color(char *info);
 
 // error
@@ -116,6 +116,7 @@ int		parsing_map(t_cub *cub, char *line);
 void	clear_map(t_list *map);
 void	clear_path(t_tex *path);
 void	clear_cub(t_cub *cub);
+
 
 // lst
 int		ft_lstsize(t_list *map);

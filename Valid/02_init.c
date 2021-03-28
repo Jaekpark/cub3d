@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/26 14:30:53 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/26 14:30:56 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/28 19:51:41 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,6 @@ t_cub	*init_cub(t_cub *cub)
 	cub->height = 0;
 	cub->floor_color = 0;
 	cub->ceiling_color = 0;
-	cub->col = 0;
-	cub->row = 0;
 	cub->map = init_list(cub->map);
 	cub->path = init_tex(cub->path);
 	return (cub);

@@ -6,10 +6,8 @@ EA textures/wall_4.xpm
 S textures/sprite_1.xpm
 ST textures/sky_1.xpm
 FT textures/floor_1.xpm
-F 1840,113,111
-C 51,198,111
-
-
+F 1 84, 113, 111
+C 51, 198, 111
 
 
 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1

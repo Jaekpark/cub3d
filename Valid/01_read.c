@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/26 14:30:50 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/26 14:30:51 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/28 19:47:08 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ int		read_file(int argc, char **argv, t_cub *cub)
 			break;
 	}
 	close(fd);
-	return (1);
+	return (ret);
 }
 
 int main(int argc, char **argv)

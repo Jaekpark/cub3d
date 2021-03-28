@@ -529,30 +529,31 @@ int parsing_path(t_cub *cub, char *line, int index)
 	return (1);
 }
 
-char	**check_color(char *info)
+int	check_color(char *line)
 {
-	char	**color;
+	int i;
 	int comma;
-	int	i;
+	int	flag;
 
-	i = -1;
-	comma = 0;
-	while (info[++i] != '\0')
-	{
-		if (!ft_isnum(info[i]) && info[i] != ',')
-			return (NULL);
-		if (info[i] == ',')
-			comma++;
-		if (comma > 2)
-			return (NULL);
-	}
-	color = ft_split(info, ',');
 	i = 0;
-	while (color[i] != NULL)
-		i++;
-	if (i != 3)
-		return (NULL);
-	return (color);
+	comma = 0;
+	flag = 0;
+	printf("%s\n", line);
+	while (line[++i] != '\0')
+	{
+		if (flag == 0 && ft_isnum(line[i]))
+			flag = 1;
+		if (flag == 1 && (line[i] == ' ' && ft_isnum(line[i + 1])))
+			return (-1);
+		if (line[i] == ',')
+		{
+			flag = 0;
+			comma++;
+			if (comma > 2)
+				return (-1);
+		}
+	}
+	return (1);
 }
 
 int parsing_color(t_cub *cub, char *line, int index)
@@ -560,23 +561,20 @@ int parsing_color(t_cub *cub, char *line, int index)
 	int r;
 	int g;
 	int b;
-	char **info;
+	int ret;
 	char **color;
 
-	info = ft_split(line, ' ');
-	if (!(color = check_color(info[1])))
-	{
-		split_mem_free(info);
+	if ((ret = check_color(line)) == -1)
 		return (-1);
-	}
+	color = ft_split(line, ',');
 	r = ft_atoi(color[0]);
 	g = ft_atoi(color[1]);
 	b = ft_atoi(color[2]);
+	printf("r = %d\n g = %d\n, b = %d\n", r, g, b);
 	if (index == CEIL_COL)
 		cub->ceiling_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
 	else if (index == FLOOR_COL)
 		cub->floor_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
-	split_mem_free(info);
 	split_mem_free(color);
 	return (1);
 }
