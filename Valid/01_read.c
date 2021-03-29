@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/26 14:30:50 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/28 19:47:08 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/29 16:43:48 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,8 @@ int		parse_line(t_cub *cub, char *line)
 		return (-1);
 	if (!(index = check_identifier(line)))
 		return (-1);
+	if (cub->is_map == 1 && (index >= 0 && index <= 10))
+		return (-1);
 	if (index >= NORTH_TEX && index <= CEIL_TEX)
 		ret = parsing_path(cub, line, index);
 	else if (index == FLOOR_COL || index == CEIL_COL)
@@ -61,10 +63,8 @@ int		parse_line(t_cub *cub, char *line)
 		ret = parsing_resolution(cub, line);
 	else if (index == MAP_LINE)
 		ret = parsing_map(cub, line);
-	else if (index == EMPTY_LINE && cub->is_map == 1)
-		ret = -1;
 	else if (index == EMPTY_LINE && cub->is_map == 0)
-		ret = 1;
+		return (1);
 	return (ret);
 }
 

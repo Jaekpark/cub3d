@@ -6,37 +6,11 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:17:15 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/26 14:23:52 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/29 16:35:15 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fix.h"
-
-char	**check_color(char *info)
-{
-	char	**color;
-	int comma;
-	int	i;
-
-	i = -1;
-	comma = 0;
-	while (info[++i] != '\0')
-	{
-		if (!ft_isnum(info[i]) && info[i] != ',')
-			return (NULL);
-		if (info[i] == ',')
-			comma++;
-		if (comma > 2)
-			return (NULL);
-	}
-	color = ft_split(info, ',');
-	if (color[3] != NULL)
-	{
-		split_mem_free(color);
-		return (NULL);
-	}
-	return (color);
-}
 
 int		check_file_name(const char *file_name)
 {

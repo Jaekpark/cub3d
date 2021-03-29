@@ -8,14 +8,15 @@
             "name": "(lldb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/a.out",
+            "program": "${fileDirname}/${fileBasenameNoExtension}.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb"
-			"osx": { "MIDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-mi"
+            "externalConsole": false,
+            "MIMode": "lldb",
+			"osx": { 
+				"MIDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-mi"
 			}
         }
     ]

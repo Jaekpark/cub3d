@@ -96,7 +96,11 @@ int		check_file_name(const char *file_name);
 int		check_option(const char *option);
 int		check_identifier(char *line);
 int		check_argv(int argc, char **argv, t_cub *cub);
-char	**check_color(char *info);
+
+// check_color
+int		check_color_space(char *line);
+int		check_color_char(char *line);
+int		make_color(char **color);
 
 // error
 int		print_error(int error);

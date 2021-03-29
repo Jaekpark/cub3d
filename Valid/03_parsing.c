@@ -6,7 +6,7 @@
 /*   By: jaekpark <jaekpark@student.42seoul.kr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/18 18:03:47 by jaekpark          #+#    #+#             */
-/*   Updated: 2021/03/26 14:17:41 by jaekpark         ###   ########.fr       */
+/*   Updated: 2021/03/29 16:54:03 by jaekpark         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,39 +37,27 @@ int parsing_path(t_cub *cub, char *line, int index)
 	return (1);
 }
 
-int make_color(char **color)
-{
-	int r;
-	int g;
-	int b;
-	int rgb;
-
-	r = ft_atoi(color[0]);
-	g = ft_atoi(color[1]);
-	b = ft_atoi(color[2]);
-	rgb = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
-	return (rgb);
-}
-
 int parsing_color(t_cub *cub, char *line, int index)
 {
-	int	rgb;
-	int ret;
-	char **info;
+	int rgb;
 	char **color;
 
-	info = ft_split(line, ' ');
-	if (!(color = valid_color(info[1])))
+	rgb = -1;
+	if ((check_color_char(line + 1) < 0))
+		return (-1);
+	if ((check_color_space(line + 1) < 0))
+		return (-1);
+	if (!(color = ft_split(line + 1, ',')))
+		return (-1);
+	if ((rgb = make_color(color) < 0))
 	{
-		split_mem_free(info);
+		split_mem_free(color);	
 		return (-1);
 	}
-	rgb = make_color(color);
 	if (index == CEIL_COL)
 		cub->ceiling_color = rgb;
 	else if (index == FLOOR_COL)
 		cub->floor_color = rgb;
-	split_mem_free(info);
 	split_mem_free(color);
 	return (1);
 }

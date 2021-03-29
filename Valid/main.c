@@ -27,6 +27,7 @@
 # define EMPTY_LINE 20
 # define MAP_LINE 21
 
+int x = 1;
 typedef struct s_node
 {
 	char	*line;
@@ -256,7 +257,7 @@ int		ft_ismap(char *line)
 
 int		ft_isnum(char c)
 {
-	if (c >= '0' && c <= '9')
+	if (c >= 48 && c <= 57)
 		return (1);
 	return (-1);
 }
@@ -395,7 +396,7 @@ static int			get_line(char **temp, char **line, char *newline)
 	if (*(newline + 1) == '\0')
 	{
 		free(*temp);
-		*temp = NULL;
+		*temp = 0;
 	}
 	else
 	{
@@ -416,10 +417,10 @@ static int			check_temp(char **temp, char **line)
 	else if (newline == NULL && *temp)
 	{
 		*line = *temp;
-		*temp = NULL;
+		*temp = 0;
 	}
 	else
-		*line = ft_strdup("\0");
+		*line = ft_strdup("");
 	return (0);
 }
 
@@ -429,8 +430,8 @@ int					get_next_line(int fd, char **line)
 	char			buf[2];
 	char			*newline;
 	int				byte_count;
-
-	newline = NULL;
+	
+	printf("%d\n", x++);
 	if (fd < 0)
 		return (-1);
 	while ((byte_count = read(fd, buf, 1)) > 0)
@@ -529,52 +530,94 @@ int parsing_path(t_cub *cub, char *line, int index)
 	return (1);
 }
 
-int	check_color(char *line)
+int	check_color_space(char *line)
 {
 	int i;
-	int comma;
-	int	flag;
+	int num;
+	int space;
 
-	i = 0;
-	comma = 0;
-	flag = 0;
-	printf("%s\n", line);
+	i = -1;
+	num = 0;
+	space = 0;
 	while (line[++i] != '\0')
 	{
-		if (flag == 0 && ft_isnum(line[i]))
-			flag = 1;
-		if (flag == 1 && (line[i] == ' ' && ft_isnum(line[i + 1])))
+		if (num == 0 && (ft_isnum(line[i]) == 1))
+			num = 1;
+		else if (num == 1 && line[i] == ' ')
+			space = 1;
+		else if (num == 1 && space == 1 && (ft_isnum(line[i]) == 1))
 			return (-1);
-		if (line[i] == ',')
+		else if (line[i] == ',')
 		{
-			flag = 0;
-			comma++;
-			if (comma > 2)
-				return (-1);
+			num = 0;
+			space = 0;
 		}
 	}
 	return (1);
 }
 
-int parsing_color(t_cub *cub, char *line, int index)
+int	check_color_char(char *line)
+{
+	int i;
+	int comma;
+	
+	i = -1;
+	comma = 0;
+	if (!line)
+		return (-1);
+	if (line[0] != ' ')
+		return (-1);
+	while (line[++i] != '\0')
+	{
+		if (line[i] == ',')
+			comma++;
+		if (comma > 2)
+			return (-1);
+		else if (line[i] != ' ' && line[i] != ',' && (ft_isnum(line[i]) != 1))
+			return (-1);
+	}
+	return (1);
+}
+
+int make_color(char **color)
 {
 	int r;
 	int g;
 	int b;
-	int ret;
+	int rgb;
+
+	if (!color)
+		return (-1);
+	if (color[3] != NULL)
+		return (-1);
+	r = ft_atoi(color[0]) & 0x0ff;
+	g = ft_atoi(color[1]) & 0x0ff;
+	b = ft_atoi(color[2]) & 0x0ff;
+	rgb = (r << 16) | (g << 8) | b;
+	return (rgb);
+}
+
+int parsing_color(t_cub *cub, char *line, int index)
+{
+	int rgb;
 	char **color;
 
-	if ((ret = check_color(line)) == -1)
+	rgb = -1;
+	if ((check_color_char(line + 1) < 0))
 		return (-1);
-	color = ft_split(line, ',');
-	r = ft_atoi(color[0]);
-	g = ft_atoi(color[1]);
-	b = ft_atoi(color[2]);
-	printf("r = %d\n g = %d\n, b = %d\n", r, g, b);
+	if ((check_color_space(line + 1) < 0))
+		return (-1);
+	if (!(color = ft_split(line + 1, ',')))
+		return (-1);
+	if (!(rgb = make_color(color)))
+	{
+		split_mem_free(color);	
+		return (-1);
+	}
 	if (index == CEIL_COL)
-		cub->ceiling_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
+		cub->ceiling_color = rgb;
 	else if (index == FLOOR_COL)
-		cub->floor_color = ((r & 0x0ff) << 16) | ((g & 0x0ff) << 8) | (b & 0x0ff);
+		cub->floor_color = rgb;
 	split_mem_free(color);
 	return (1);
 }
@@ -747,10 +790,11 @@ int		parse_line(t_cub *cub, char *line)
 	int ret;
 	int index;
 
-	ret = 0;
-	if (!cub)
-		return (-1);
+	ret = -1;
+	printf("parse line %d\n", x);
 	if (!(index = check_identifier(line)))
+		return (-1);
+	if (cub->is_map == 1 && (index >= NORTH_TEX && index <= EMPTY_LINE))
 		return (-1);
 	if (index >=NORTH_TEX && index <= CEIL_TEX)
 		ret = parsing_path(cub, line, index);
@@ -760,10 +804,8 @@ int		parse_line(t_cub *cub, char *line)
 		ret = parsing_resolution(cub, line);
 	else if (index == MAP_LINE)
 		ret = parsing_map(cub, line);
-	else if (index == EMPTY_LINE && cub->is_map == 1)
-		ret = -1;
 	else if (index == EMPTY_LINE && cub->is_map == 0)
-		ret = 1;
+		return (1);
 	return (ret);
 }
 
@@ -776,12 +818,11 @@ int		read_file(int argc, char **argv, t_cub *cub)
 
 	ret = 0;
 	eof = 1;
-	line = NULL;
 	if ((fd = open("./1.cub", O_RDONLY)) < 0)
 		return (print_error(OPEN_ERR));
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
-		ret = parse_line(cub, line);
+		//ret = parse_line(cub, line);
 		free(line);
 		if (eof <= 0 || ret < 0)
 			break;
@@ -798,15 +839,14 @@ int main(int argc, char **argv)
 	cub = init_cub(cub);
 	if ((ret = read_file(argc, argv, cub)) == -1)
 	{
-		clear_cub(cub);
+	//	clear_cub(cub);
 		printf("ret = %d\n", ret);
 	}
 	else
 	{
-		print_cub(cub);
-		clear_cub(cub);
+	//	print_cub(cub);
+	//	clear_cub(cub);
 	}
-
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 	return (0);
 }
