@@ -27,6 +27,22 @@
 # define EMPTY_LINE 20
 # define MAP_LINE 21
 
+# define BUFFER_SIZE 128
+
+typedef struct	s_str
+{
+	char			*content;
+	struct s_str	*next;
+}				t_str;
+
+typedef struct	s_fd
+{
+	int			fd;
+	t_str		*str;
+	struct s_fd	*next;
+}				t_fd;
+
+
 int x = 1;
 typedef struct s_node
 {
@@ -66,6 +82,20 @@ typedef struct s_cub
 	t_tex	*path;
 }	t_cub;
 
+int
+	str_clear(t_str **list)
+{
+	t_str	*tmp;
+
+	while (*list)
+	{
+		tmp = (*list)->next;
+		free((*list)->content);
+		free(*list);
+		(*list) = tmp;
+	}
+	return (0);
+}
 
 t_list	*init_list(t_list *list)
 {
@@ -385,66 +415,244 @@ char			**ft_split(char const *s, char c)
 	return (dest);
 }
 
-
-static int			get_line(char **temp, char **line, char *newline)
+t_fd
+	*find_fd(t_fd **list, int fd, int *new)
 {
-	char			*tmp;
+	t_fd	*ret;
+	t_fd	*first;
 
-	tmp = NULL;
-	*newline = '\0';
-	*line = ft_strdup(*temp);
-	if (*(newline + 1) == '\0')
+	ret = NULL;
+	first = *list;
+	*new = 0;
+	while (*list && !ret)
 	{
-		free(*temp);
-		*temp = 0;
+		if ((*list)->fd == fd)
+			ret = *list;
+		*list = (*list)->next;
 	}
-	else
+	*list = first;
+	if (!ret)
 	{
-		tmp = ft_strdup(newline + 1);
-		free(*temp);
-		*temp = tmp;
+		if (!(ret = (t_fd *)malloc(sizeof(*ret))))
+			return (NULL);
+		ret->fd = fd;
+		ret->next = *list;
+		ret->str = NULL;
+		*list = ret;
+		*new = 1;
 	}
-	return (1);
+	return (ret);
 }
 
-static int			check_temp(char **temp, char **line)
+int
+	find_nl(t_str *str, char *sim_str)
 {
-	char			*newline;
+	int	i;
 
-	newline = ft_strchr(*temp, '\n');
-	if (*temp && newline != NULL)
-		return (get_line(temp, line, newline));
-	else if (newline == NULL && *temp)
+	if (!str)
 	{
-		*line = *temp;
-		*temp = 0;
+		i = 0;
+		while (sim_str[i] && sim_str[i] != '\n')
+			i++;
+		if (sim_str[i] == '\n')
+			return (1);
 	}
 	else
-		*line = ft_strdup("");
+	{
+		while (str)
+		{
+			i = 0;
+			while (str->content[i]
+				&& str->content[i] != '\n')
+				i++;
+			if (str->content[i] == '\n')
+				return (1);
+			str = str->next;
+		}
+	}
 	return (0);
 }
 
-int					get_next_line(int fd, char **line)
+int
+	read_file(t_str **str, char *buffer, int fd)
 {
-	static char		*temp[OPEN_MAX];
-	char			buf[2];
-	char			*newline;
-	int				byte_count;
-	
-	printf("%d\n", x++);
-	if (fd < 0)
-		return (-1);
-	while ((byte_count = read(fd, buf, 1)) > 0)
+	int		r;
+	t_str	*new;
+	t_str	*first;
+
+	if ((r = read(fd, buffer, BUFFER_SIZE)) > 0)
 	{
-		buf[byte_count] = '\0';
-		temp[fd] = ft_strjoin(temp[fd], buf);
-		if ((newline = ft_strchr(temp[fd], '\n')) != NULL)
-			break ;
+		buffer[r] = 0;
+		if (!(new = (t_str*)malloc(sizeof(*new)))
+			|| !(new->content = ft_strdup(buffer)))
+			return (-2);
+		new->next = NULL;
+		if (!*str)
+			*str = new;
+		else
+		{
+			first = *str;
+			while ((*str)->next)
+				(*str) = (*str)->next;
+			(*str)->next = new;
+			*str = first;
+		}
+		return (1);
 	}
-	if (byte_count < 0)
-		return (-1);
-	return (check_temp(&temp[fd], line));
+	return ((r < 0) ? -1 : 0);
 }
+
+int
+	lst_clear(t_str **list)
+{
+	t_str	*tmp;
+
+	while (*list)
+	{
+		tmp = (*list)->next;
+		free((*list)->content);
+		free(*list);
+		(*list) = tmp;
+	}
+	*list = NULL;
+	return (0);
+}
+
+
+int
+	read_file_until_nl(t_str **str, int fd)
+{
+	char	*buffer;
+	int		r;
+
+	if (!(buffer = (char *)malloc(sizeof(*buffer) * (BUFFER_SIZE + 1))))
+		return (-1);
+	while ((r = read_file(str, buffer, fd)) > 0)
+		if (find_nl(NULL, buffer))
+			break ;
+	free(buffer);
+	if (r < 0)
+		return (-2);
+	return (1);
+}
+
+int
+	malloc_next_line(t_str **str, char **line)
+{
+	t_str	*first;
+	int		i;
+	int		j;
+	char	*buffer;
+
+	first = *str;
+	j = 0;
+	while (*str)
+	{
+		i = 0;
+		while ((*str)->content[i] && (*str)->content[i] != '\n' && ++j)
+			i++;
+		if ((*str)->content[i] == '\n')
+			break ;
+		*str = (*str)->next;
+	}
+	*str = first;
+	if (!(buffer = (char *)malloc(sizeof(*buffer) * (j + 1))))
+		return (0);
+	*line = buffer;
+	(*line)[j] = 0;
+	return (1);
+}
+
+int
+	write_next_line(t_str **str, char **line)
+{
+	int		idx[2];
+	int		remaining;
+	t_str	*next;
+
+	idx[1] = 0;
+	remaining = 0;
+	while (*str)
+	{
+		idx[0] = 0;
+		while ((*str)->content[idx[0]] && (*str)->content[idx[0]] != '\n')
+			(*line)[idx[1]++] = (*str)->content[idx[0]++];
+		if ((*str)->content[idx[0]++] == '\n' && (remaining = 1))
+		{
+			idx[1] = 0;
+			while ((*str)->content[idx[0]])
+				(*str)->content[idx[1]++] = (*str)->content[idx[0]++];
+			(*str)->content[idx[1]] = 0;
+			break ;
+		}
+		next = (*str)->next;
+		free((*str)->content);
+		free(*str);
+		*str = next;
+	}
+	return (remaining);
+}
+
+static int
+	free_all(t_fd **list, int fd, char *buf)
+{
+	t_fd	*first;
+	t_fd	*lt[2];
+
+	first = (list) ? *list : NULL;
+	lt[0] = NULL;
+	while (list && *list)
+	{
+		lt[1] = (*list)->next;
+		if (fd < 0 || (*list)->fd == fd)
+		{
+			if (first == (*list))
+				first = lt[1];
+			str_clear(&(*list)->str);
+			free((*list));
+			if (lt[0])
+				lt[0]->next = lt[1];
+		}
+		lt[0] = (*list);
+		(*list) = lt[1];
+	}
+	if (list)
+		*list = first;
+	if (buf)
+		free(buf);
+	return (0);
+}
+
+int
+	get_next_line(int fd, char **line)
+{
+	static t_fd	*list = NULL;
+	t_fd		*current;
+	int			read_rem;
+	char		*buffer;
+	int			r;
+
+	if (!(current = find_fd(&list, fd, &read_rem)))
+		return (free_all(&list, -1, NULL) | -1);
+	if ((buffer = NULL) || (!read_rem && current->str))
+		read_rem = !find_nl(current->str, NULL);
+	if (read_rem && (r = read_file_until_nl(&current->str, fd)) < 0)
+		return (free_all(&list, (r == -1) ? -1 : fd, NULL) | -1);
+	if (!malloc_next_line(&current->str, line))
+		return (free_all(&list, -1, NULL) | -1);
+	if (!(read_rem = write_next_line(&current->str, line)))
+	{
+		if (!(buffer = (char*)malloc(sizeof(*buffer) * (BUFFER_SIZE + 1))))
+			return (free_all(&list, -1, NULL));
+		r = read_file(&current->str, buffer, fd);
+		if (free_all(NULL, -1, buffer) || r < 0)
+			return (free_all(&list, fd, NULL) | -1);
+	}
+	if (r > 0 || read_rem)
+		return (1);
+	return (free_all(&list, fd, NULL));
+}
+
 
 void	clear_map(t_list *map)
 {
@@ -791,7 +999,6 @@ int		parse_line(t_cub *cub, char *line)
 	int index;
 
 	ret = -1;
-	printf("parse line %d\n", x);
 	if (!(index = check_identifier(line)))
 		return (-1);
 	if (cub->is_map == 1 && (index >= NORTH_TEX && index <= EMPTY_LINE))
@@ -809,7 +1016,7 @@ int		parse_line(t_cub *cub, char *line)
 	return (ret);
 }
 
-int		read_file(int argc, char **argv, t_cub *cub)
+int		read_cub(int argc, char **argv, t_cub *cub)
 {
 	int		fd;
 	int 	eof;
@@ -822,7 +1029,7 @@ int		read_file(int argc, char **argv, t_cub *cub)
 		return (print_error(OPEN_ERR));
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
-		//ret = parse_line(cub, line);
+		ret = parse_line(cub, line);
 		free(line);
 		if (eof <= 0 || ret < 0)
 			break;
@@ -837,15 +1044,15 @@ int main(int argc, char **argv)
 	t_cub *cub;
 
 	cub = init_cub(cub);
-	if ((ret = read_file(argc, argv, cub)) == -1)
+	if ((ret = read_cub(argc, argv, cub)) == -1)
 	{
-	//	clear_cub(cub);
+		clear_cub(cub);
 		printf("ret = %d\n", ret);
 	}
 	else
 	{
-	//	print_cub(cub);
-	//	clear_cub(cub);
+		print_cub(cub);
+		clear_cub(cub);
 	}
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 	return (0);
