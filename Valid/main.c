@@ -28,6 +28,22 @@
 # define EMPTY_LINE 20
 # define MAP_LINE 21
 
+# define BUFFER_SIZE 128
+
+typedef struct	s_str
+{
+	char			*content;
+	struct s_str	*next;
+}				t_str;
+
+typedef struct	s_fd
+{
+	int			fd;
+	t_str		*str;
+	struct s_fd	*next;
+}				t_fd;
+
+
 int x = 1;
 typedef struct s_node
 {
@@ -67,6 +83,7 @@ typedef struct s_cub
 	t_tex	*path;
 }	t_cub;
 
+<<<<<<< HEAD
 int			ft_strlen(char *s)
 {
 	int		len;
@@ -145,6 +162,21 @@ int is_wall(char **map_buffer, int x, int y, int fx, int fy)
 	//else if (visited[x][y] == 'v')
 		//return (-1);
 	return (1);
+=======
+int
+	str_clear(t_str **list)
+{
+	t_str	*tmp;
+
+	while (*list)
+	{
+		tmp = (*list)->next;
+		free((*list)->content);
+		free(*list);
+		(*list) = tmp;
+	}
+	return (0);
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 }
 
 t_list	*init_list(t_list *list)
@@ -455,6 +487,7 @@ char			**ft_split(char const *s, char c)
 	return (dest);
 }
 
+<<<<<<< HEAD
 int					is_newline(char *backup)
 {
 	int				i;
@@ -465,6 +498,49 @@ int					is_newline(char *backup)
 		if (backup[i] == '\n')
 			return (i);
 		i++;
+=======
+t_fd
+	*find_fd(t_fd **list, int fd, int *new)
+{
+	t_fd	*ret;
+	t_fd	*first;
+
+	ret = NULL;
+	first = *list;
+	*new = 0;
+	while (*list && !ret)
+	{
+		if ((*list)->fd == fd)
+			ret = *list;
+		*list = (*list)->next;
+	}
+	*list = first;
+	if (!ret)
+	{
+		if (!(ret = (t_fd *)malloc(sizeof(*ret))))
+			return (NULL);
+		ret->fd = fd;
+		ret->next = *list;
+		ret->str = NULL;
+		*list = ret;
+		*new = 1;
+	}
+	return (ret);
+}
+
+int
+	find_nl(t_str *str, char *sim_str)
+{
+	int	i;
+
+	if (!str)
+	{
+		i = 0;
+		while (sim_str[i] && sim_str[i] != '\n')
+			i++;
+		if (sim_str[i] == '\n')
+			return (1);
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 	}
 	return (-1);
 }
@@ -479,6 +555,7 @@ int					split_line(char **backup, char **line, int cut_idx)
 	len = ft_strlen(*backup + cut_idx + 1);
 	if (len == 0)
 	{
+<<<<<<< HEAD
 		free(*backup);
 		*backup = 0;
 		return (1);
@@ -504,11 +581,72 @@ int					return_all(char **backup, char **line, int read_size)
 		return (0);
 	}
 	*line = ft_strdup("");
+=======
+		while (str)
+		{
+			i = 0;
+			while (str->content[i]
+				&& str->content[i] != '\n')
+				i++;
+			if (str->content[i] == '\n')
+				return (1);
+			str = str->next;
+		}
+	}
 	return (0);
 }
 
-int					get_next_line(int fd, char **line)
+int
+	read_file(t_str **str, char *buffer, int fd)
 {
+	int		r;
+	t_str	*new;
+	t_str	*first;
+
+	if ((r = read(fd, buffer, BUFFER_SIZE)) > 0)
+	{
+		buffer[r] = 0;
+		if (!(new = (t_str*)malloc(sizeof(*new)))
+			|| !(new->content = ft_strdup(buffer)))
+			return (-2);
+		new->next = NULL;
+		if (!*str)
+			*str = new;
+		else
+		{
+			first = *str;
+			while ((*str)->next)
+				(*str) = (*str)->next;
+			(*str)->next = new;
+			*str = first;
+		}
+		return (1);
+	}
+	return ((r < 0) ? -1 : 0);
+}
+
+int
+	lst_clear(t_str **list)
+{
+	t_str	*tmp;
+
+	while (*list)
+	{
+		tmp = (*list)->next;
+		free((*list)->content);
+		free(*list);
+		(*list) = tmp;
+	}
+	*list = NULL;
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
+	return (0);
+}
+
+
+int
+	read_file_until_nl(t_str **str, int fd)
+{
+<<<<<<< HEAD
 	static char		*backup[OPEN_MAX];
 	char			buf[BUFFER_SIZE + 1];
 	int				read_size;
@@ -524,7 +662,139 @@ int					get_next_line(int fd, char **line)
 			return (split_line(&backup[fd], line, cut_idx));
 	}
 	return (return_all(&backup[fd], line, read_size));
+=======
+	char	*buffer;
+	int		r;
+
+	if (!(buffer = (char *)malloc(sizeof(*buffer) * (BUFFER_SIZE + 1))))
+		return (-1);
+	while ((r = read_file(str, buffer, fd)) > 0)
+		if (find_nl(NULL, buffer))
+			break ;
+	free(buffer);
+	if (r < 0)
+		return (-2);
+	return (1);
 }
+
+int
+	malloc_next_line(t_str **str, char **line)
+{
+	t_str	*first;
+	int		i;
+	int		j;
+	char	*buffer;
+
+	first = *str;
+	j = 0;
+	while (*str)
+	{
+		i = 0;
+		while ((*str)->content[i] && (*str)->content[i] != '\n' && ++j)
+			i++;
+		if ((*str)->content[i] == '\n')
+			break ;
+		*str = (*str)->next;
+	}
+	*str = first;
+	if (!(buffer = (char *)malloc(sizeof(*buffer) * (j + 1))))
+		return (0);
+	*line = buffer;
+	(*line)[j] = 0;
+	return (1);
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
+}
+
+int
+	write_next_line(t_str **str, char **line)
+{
+	int		idx[2];
+	int		remaining;
+	t_str	*next;
+
+	idx[1] = 0;
+	remaining = 0;
+	while (*str)
+	{
+		idx[0] = 0;
+		while ((*str)->content[idx[0]] && (*str)->content[idx[0]] != '\n')
+			(*line)[idx[1]++] = (*str)->content[idx[0]++];
+		if ((*str)->content[idx[0]++] == '\n' && (remaining = 1))
+		{
+			idx[1] = 0;
+			while ((*str)->content[idx[0]])
+				(*str)->content[idx[1]++] = (*str)->content[idx[0]++];
+			(*str)->content[idx[1]] = 0;
+			break ;
+		}
+		next = (*str)->next;
+		free((*str)->content);
+		free(*str);
+		*str = next;
+	}
+	return (remaining);
+}
+
+static int
+	free_all(t_fd **list, int fd, char *buf)
+{
+	t_fd	*first;
+	t_fd	*lt[2];
+
+	first = (list) ? *list : NULL;
+	lt[0] = NULL;
+	while (list && *list)
+	{
+		lt[1] = (*list)->next;
+		if (fd < 0 || (*list)->fd == fd)
+		{
+			if (first == (*list))
+				first = lt[1];
+			str_clear(&(*list)->str);
+			free((*list));
+			if (lt[0])
+				lt[0]->next = lt[1];
+		}
+		lt[0] = (*list);
+		(*list) = lt[1];
+	}
+	if (list)
+		*list = first;
+	if (buf)
+		free(buf);
+	return (0);
+}
+
+int
+	get_next_line(int fd, char **line)
+{
+	static t_fd	*list = NULL;
+	t_fd		*current;
+	int			read_rem;
+	char		*buffer;
+	int			r;
+
+	if (!(current = find_fd(&list, fd, &read_rem)))
+		return (free_all(&list, -1, NULL) | -1);
+	if ((buffer = NULL) || (!read_rem && current->str))
+		read_rem = !find_nl(current->str, NULL);
+	if (read_rem && (r = read_file_until_nl(&current->str, fd)) < 0)
+		return (free_all(&list, (r == -1) ? -1 : fd, NULL) | -1);
+	if (!malloc_next_line(&current->str, line))
+		return (free_all(&list, -1, NULL) | -1);
+	if (!(read_rem = write_next_line(&current->str, line)))
+	{
+		if (!(buffer = (char*)malloc(sizeof(*buffer) * (BUFFER_SIZE + 1))))
+			return (free_all(&list, -1, NULL));
+		r = read_file(&current->str, buffer, fd);
+		if (free_all(NULL, -1, buffer) || r < 0)
+			return (free_all(&list, fd, NULL) | -1);
+	}
+	if (r > 0 || read_rem)
+		return (1);
+	return (free_all(&list, fd, NULL));
+}
+
 
 void	clear_map(t_list *map)
 {
@@ -872,7 +1142,11 @@ int		parse_line(t_cub *cub, char *line)
 	int ret;
 	int index;
 
+<<<<<<< HEAD
 	ret = 0;
+=======
+	ret = -1;
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 	if (!(index = check_identifier(line)))
 		return (-1);
 	if (cub->is_map == 1 && (index >= NORTH_TEX && index <= EMPTY_LINE))
@@ -890,7 +1164,7 @@ int		parse_line(t_cub *cub, char *line)
 	return (ret);
 }
 
-int		read_file(int argc, char **argv, t_cub *cub)
+int		read_cub(int argc, char **argv, t_cub *cub)
 {
 	int		fd;
 	int 	eof;
@@ -903,7 +1177,10 @@ int		read_file(int argc, char **argv, t_cub *cub)
 		return (print_error(OPEN_ERR));
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
+<<<<<<< HEAD
 		printf("line = %s\n", line);
+=======
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 		ret = parse_line(cub, line);
 		free(line);
 		if (eof <= 0 || ret < 0)
@@ -928,6 +1205,7 @@ int main(int argc, char **argv)
 	fx = 0;
 	fy = 0;
 	cub = init_cub(cub);
+<<<<<<< HEAD
 	if ((ret = read_file(argc, argv, cub)) == -1)
 		return (-1);
 	visited = malloc(sizeof(char *) * ft_lstsize(cub->map) + 1);
@@ -938,12 +1216,19 @@ int main(int argc, char **argv)
 		map_buffer[i] = ft_strdup(temp->line);
 		temp = temp->next;
 		i++;
+=======
+	if ((ret = read_cub(argc, argv, cub)) == -1)
+	{
+		clear_cub(cub);
+		printf("ret = %d\n", ret);
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 	}
 	map_buffer[i] = NULL;
 	i = 0;
 	
 	while (map_buffer[fx][fy] != '\0')
 	{
+<<<<<<< HEAD
 		if (map_buffer[fx][fy] == '1')
 			break;
 		fy++;
@@ -955,6 +1240,10 @@ int main(int argc, char **argv)
 		visited[i] = ft_strdup(map_buffer[i]);
 		printf("visited = %s\n", visited[i]);
 		i++;
+=======
+		print_cub(cub);
+		clear_cub(cub);
+>>>>>>> 1f63864cf8e52e038a99c791e0dbae7389b0e6c5
 	}
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 	return (0);
