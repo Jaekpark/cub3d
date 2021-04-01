@@ -7,6 +7,7 @@
 # define VALID_CHAR " 012NSEW"
 # define SAVE "--save"
 
+# define BUFFER_SIZE 128
 # define OPEN_MAX 32
 # define NO_ARG 100
 # define WRONG_NAME 101
@@ -66,6 +67,85 @@ typedef struct s_cub
 	t_tex	*path;
 }	t_cub;
 
+int			ft_strlen(char *s)
+{
+	int		len;
+
+	len = 0;
+	while (s[len])
+		len++;
+	return (len);
+}
+int is_Wall(char **map_buffer, int x, int y)
+{
+	int i = 0;
+	printf("iswall func call\n");
+	while (map_buffer[x][y] != '\0')
+	{
+		printf("while = %s\n", map_buffer[x]);
+		if (y != ft_strlen(map_buffer[x]) - 1 && map_buffer[x][y + 1] == '1')
+		{
+			map_buffer[x][y + 1] = 'v';
+			y++;
+		}
+		else if (x != 13 && map_buffer[x + 1][y] == '1')
+		{
+			map_buffer[x + 1][y] = 'v';
+			x++;
+		}
+		else if (y >= 1 && map_buffer[x][y - 1] == '1')
+		{
+			map_buffer[x][y -1] = 'v';
+			y--;
+		}
+		else if (x >= 1 && map_buffer[x - 1][y] == '1')
+		{	
+			x--;
+			map_buffer[x][y] = 'v';
+		}
+		else
+			break;
+	}
+//	while (map_buffer[i] != NULL)
+	//{
+		//printf("map_buffer = %s\n", map_buffer[i]);
+		//i++;
+	//}
+	return (1);
+}
+
+int is_wall(char **map_buffer, int x, int y, int fx, int fy)
+{
+	printf("visited == %s\n", map_buffer[x]);
+	if (y < ft_strlen(map_buffer[x]) && map_buffer[x][y - 1] == '1')
+	{
+		map_buffer[x][y - 1] = 'v';
+		is_wall(map_buffer, x, y - 1, fx, fy);
+	}
+	if (y < ft_strlen(map_buffer[x]) && map_buffer[x][y + 1] != '\0' && map_buffer[x][y + 1] == '1')
+	{
+		map_buffer[x][y + 1] = 'v';
+		is_wall(map_buffer, x, y + 1, fx, fy);
+	}
+	if (x != 13 && map_buffer[x + 1][y] == '1')
+	{
+		map_buffer[x + 1][y] = 'v';
+		is_wall(map_buffer, x + 1, y, fx, fy);
+	}
+	if (x != 0 && map_buffer[x - 1][y] != '\0' && map_buffer[x - 1][y] == '1')
+	{
+		map_buffer[x - 1][y] = 'v';
+		is_wall(map_buffer, x - 1, y, fx, fy);
+	}
+	else if (map_buffer[fx][fy] == 'v')
+	{
+		printf("valid\n");
+		return (1);
+	}
+	//else if (visited[x][y] == 'v')
+		//return (-1);
+	return (1);
+}
 
 t_list	*init_list(t_list *list)
 {
@@ -106,16 +186,6 @@ t_cub	*init_cub(t_cub *cub)
 	cub->map = init_list(cub->map);
 	cub->path = init_tex(cub->path);
 	return (cub);
-}
-
-int			ft_strlen(char *s)
-{
-	int		len;
-
-	len = 0;
-	while (s[len])
-		len++;
-	return (len);
 }
 
 char		*ft_strdup(char *s1)
@@ -385,65 +455,75 @@ char			**ft_split(char const *s, char c)
 	return (dest);
 }
 
-
-static int			get_line(char **temp, char **line, char *newline)
+int					is_newline(char *backup)
 {
-	char			*tmp;
+	int				i;
 
-	tmp = NULL;
-	*newline = '\0';
-	*line = ft_strdup(*temp);
-	if (*(newline + 1) == '\0')
+	i = 0;
+	while (backup[i])
 	{
-		free(*temp);
-		*temp = 0;
+		if (backup[i] == '\n')
+			return (i);
+		i++;
 	}
-	else
+	return (-1);
+}
+
+int					split_line(char **backup, char **line, int cut_idx)
+{
+	char			*temp;
+	int				len;
+
+	(*backup)[cut_idx] = '\0';
+	*line = ft_strdup(*backup);
+	len = ft_strlen(*backup + cut_idx + 1);
+	if (len == 0)
 	{
-		tmp = ft_strdup(newline + 1);
-		free(*temp);
-		*temp = tmp;
+		free(*backup);
+		*backup = 0;
+		return (1);
 	}
+	temp = ft_strdup(*backup + cut_idx + 1);
+	free(*backup);
+	*backup = temp;
 	return (1);
 }
 
-static int			check_temp(char **temp, char **line)
+int					return_all(char **backup, char **line, int read_size)
 {
-	char			*newline;
+	int				cut_idx;
 
-	newline = ft_strchr(*temp, '\n');
-	if (*temp && newline != NULL)
-		return (get_line(temp, line, newline));
-	else if (newline == NULL && *temp)
+	if (read_size < 0)
+		return (-1);
+	if (*backup && (cut_idx = is_newline(*backup)) >= 0)
+		return (split_line(backup, line, cut_idx));
+	else if (*backup)
 	{
-		*line = *temp;
-		*temp = 0;
+		*line = *backup;
+		*backup = 0;
+		return (0);
 	}
-	else
-		*line = ft_strdup("");
+	*line = ft_strdup("");
 	return (0);
 }
 
 int					get_next_line(int fd, char **line)
 {
-	static char		*temp[OPEN_MAX];
-	char			buf[2];
-	char			*newline;
-	int				byte_count;
-	
-	printf("%d\n", x++);
-	if (fd < 0)
+	static char		*backup[OPEN_MAX];
+	char			buf[BUFFER_SIZE + 1];
+	int				read_size;
+	int				cut_idx;
+
+	if ((fd < 0) || (BUFFER_SIZE <= 0))
 		return (-1);
-	while ((byte_count = read(fd, buf, 1)) > 0)
+	while ((read_size = read(fd, buf, BUFFER_SIZE)) > 0)
 	{
-		buf[byte_count] = '\0';
-		temp[fd] = ft_strjoin(temp[fd], buf);
-		if ((newline = ft_strchr(temp[fd], '\n')) != NULL)
-			break ;
+		buf[read_size] = '\0';
+		backup[fd] = ft_strjoin(backup[fd], buf);
+		if ((cut_idx = is_newline(backup[fd])) >= 0)
+			return (split_line(&backup[fd], line, cut_idx));
 	}
-	if (byte_count < 0)
-		return (-1);
-	return (check_temp(&temp[fd], line));
+	return (return_all(&backup[fd], line, read_size));
 }
 
 void	clear_map(t_list *map)
@@ -646,6 +726,7 @@ int parsing_map(t_cub *cub, char *line)
 	t_list	*tmp;
 	t_node	*node;
 
+	printf("map parse \n");
 	tmp = cub->map;
 	cub->is_map = 1;
 	if (!(node = malloc(sizeof(t_node))))
@@ -705,7 +786,8 @@ int		check_option(const char *option)
 
 int		check_identifier(char *line)
 {
-	if (line[0] == 0)
+	printf("check identi\n");
+	if (ft_strlen(line) == 1 && line[0] == 0)
 		return (EMPTY_LINE);
 	else if (ft_strncmp(line, "R ", 2) == 0)
 		return (RESOLUTION);
@@ -790,8 +872,7 @@ int		parse_line(t_cub *cub, char *line)
 	int ret;
 	int index;
 
-	ret = -1;
-	printf("parse line %d\n", x);
+	ret = 0;
 	if (!(index = check_identifier(line)))
 		return (-1);
 	if (cub->is_map == 1 && (index >= NORTH_TEX && index <= EMPTY_LINE))
@@ -822,7 +903,8 @@ int		read_file(int argc, char **argv, t_cub *cub)
 		return (print_error(OPEN_ERR));
 	while ((eof = get_next_line(fd, &line)) >= 0)
 	{
-		//ret = parse_line(cub, line);
+		printf("line = %s\n", line);
+		ret = parse_line(cub, line);
 		free(line);
 		if (eof <= 0 || ret < 0)
 			break;
@@ -834,18 +916,45 @@ int		read_file(int argc, char **argv, t_cub *cub)
 int main(int argc, char **argv)
 {
 	int ret;
+	int fx;
+	int fy;
 	t_cub *cub;
+	t_node *temp;
+	int i;
+	char **visited;
+	char **map_buffer;
 
+	i = 0;
+	fx = 0;
+	fy = 0;
 	cub = init_cub(cub);
 	if ((ret = read_file(argc, argv, cub)) == -1)
+		return (-1);
+	visited = malloc(sizeof(char *) * ft_lstsize(cub->map) + 1);
+	temp = cub->map->head;
+	map_buffer = malloc(sizeof(char *) * (ft_lstsize(cub->map) + 1));
+	while (temp != NULL)
 	{
-	//	clear_cub(cub);
-		printf("ret = %d\n", ret);
+		map_buffer[i] = ft_strdup(temp->line);
+		temp = temp->next;
+		i++;
 	}
-	else
+	map_buffer[i] = NULL;
+	i = 0;
+	
+	while (map_buffer[fx][fy] != '\0')
 	{
-	//	print_cub(cub);
-	//	clear_cub(cub);
+		if (map_buffer[fx][fy] == '1')
+			break;
+		fy++;
+	}
+	printf("%d %d\n", fx, fy);
+	is_wall(map_buffer, fx, fy, fx, fy);
+	while (map_buffer[i] != NULL)
+	{
+		visited[i] = ft_strdup(map_buffer[i]);
+		printf("visited = %s\n", visited[i]);
+		i++;
 	}
 	system("leaks a.out > leaks_result_temp; cat leaks_result_temp | grep leaked && rm -rf leaks_result_temp");
 	return (0);
